@@ -19,7 +19,184 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
     <link href="css/base.css" rel="stylesheet">
-    <style></style>
+    <style>
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            z-index: 9999;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+        }
+        .toast-message i {
+            margin-right: 8px;
+            color: #15b374;
+        }
+        .toast-message.show {
+            opacity: 1;
+        }
+        .navi a.tip {
+            /* margin-right: 8px; */
+            padding: 0px 8px;
+        }
+        
+        /* AI修复按钮闪烁效果 */
+        @keyframes glow-animation {
+            0% { color: #f1592a; text-shadow: 0 0 5px rgba(241, 89, 42, 0.5); }
+            50% { color: #ff8800; text-shadow: 0 0 15px rgba(255, 136, 0, 0.8), 0 0 20px rgba(255, 136, 0, 0.5); }
+            100% { color: #f1592a; text-shadow: 0 0 5px rgba(241, 89, 42, 0.5); }
+        }
+        
+        .ai-fix-glow {
+            animation: glow-animation 1s infinite;
+        }
+        
+        /* 自适应高度设置 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            flex-shrink: 0;
+        }
+        
+        main.row-fluid {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        main.row-fluid > div {
+            height: 100%;
+            position: relative;
+        }
+        
+        #json-src {
+            height: 100% !important;
+        }
+        
+        #right-box {
+            height: calc(100% - 37px) !important;
+        }
+        
+        /* 修复numberedtextarea相关样式 */
+        .numberedtextarea-wrapper {
+            height: 100% !important;
+            display: flex;
+            flex-direction: column;
+            /* 移除任何可能导致发光的边框效果 */
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            transition: none !important;
+            animation: none !important;
+        }
+        
+        .numberedtextarea-wrapper textarea {
+            flex: 1;
+            height: 100% !important;
+            padding-top: 12px !important;
+            /* 确保输入框没有边框效果 */
+            outline: none !important;
+            box-shadow: none !important;
+            transition: none !important;
+        }
+        
+        .numberedtextarea-line-numbers {
+            height: 100% !important;
+            padding-top: 12px !important;
+            /* 确保行号区域没有边框效果 */
+            border: none !important;
+            box-shadow: none !important;
+            transition: none !important;
+        }
+        
+        /* 覆盖jquery.numberedtextarea.css中可能存在的过渡效果 */
+        .numberedtextarea-wrapper * {
+            transition: none !important;
+            animation: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 上传按钮样式 */
+        .upload-btn {
+            position: absolute;
+            top: 6px;
+            right: 11px;
+            z-index: 100;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            padding: 5px 8px;
+            cursor: pointer;
+            color: #777;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .upload-btn:hover {
+            background-color: #e9ecef;
+            color: #333;
+        }
+        
+        /* 隐藏文件输入 */
+        #file-upload {
+            display: none;
+        }
+        
+        /* 可拖动分割线样式 - 完全重写以消除任何发光效果 */
+        .resizer {
+            width: 6px;
+            height: 100%;
+            position: absolute;
+            right: 0;
+            top: 0;
+            cursor: col-resize;
+            z-index: 200;
+            background: #eee;
+            border-left: 1px solid #ddd;
+            border-right: 1px solid #ddd;
+            /* 确保没有任何可能导致发光的样式 */
+            box-shadow: none !important;
+            text-shadow: none !important;
+            transition: none !important;
+            animation: none !important;
+            outline: none !important;
+        }
+        
+        .resizer:hover {
+            background-color: #ccc;
+        }
+        
+        .resizer.dragging {
+            background-color: #ccc;
+        }
+        
+        /* 拖动时禁用文本选择 */
+        body.dragging {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            cursor: col-resize !important;
+        }
+    </style>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
       <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -28,10 +205,11 @@
     <!-- Favicons -->
 </head>
 <body style="over-flow:hidden;">
+<div class="toast-message" id="toast-message"><i class="fa fa-check-circle"></i><span id="toast-text">已复制到剪贴板</span></div>
 <header class="header">
     <div class="row-fluid" >
         <div class="col-md-5" style="position:relative;">
-            <a class="logo" href="index.html">Json.<span style="color:#555;">junbaor.com</span></a>
+            <a class="logo" href="index.html">hi<span style="color:#555;">json.com</span></a>
 
         </div>
         <nav class="col-md-7" style="padding:10px 0;"  align="right">
@@ -51,19 +229,30 @@
 
 <main class="row-fluid">
     <div class="col-md-5" style="padding:0;">
-        <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..."   class="form-control"  style="height:722px;padding:0 10px 10px 20px;border:0;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none; outline:none;">{&#13"Json解析":"支持格式化高亮折叠",&#13"支持XML转换":"支持XML转换Json,Json转XML",&#13"Json格式验证":"更详细准确的错误信息"</textarea>
+        <label class="upload-btn" for="file-upload" title="上传JSON文件">
+            <i class="fa fa-upload"></i> 上传
+        </label>
+        <input type="file" id="file-upload" accept=".json,.txt">
+        <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..."   class="form-control"  style="height:722px;padding:0 10px 10px 20px;border:0;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none; outline:none;">{&#13"网站名称": "hijson.com",&#13"功能介绍": "最好用的JSON在线解析工具",&#13"特色功能": {&#13  "JSON解析": "支持格式化高亮折叠",&#13  "支持XML转换": "支持XML转换JSON,JSON转XML",&#13  "格式验证": "详细准确的错误提示",&#13  "宽松解析": "支持注释和尾部逗号"&#13},&#13"记住我们": "hijson.com - 简单易用的JSON工具"&#13}</textarea>
+        <!-- 重新创建分割线元素，移除可能的事件和样式 -->
+        <div id="divider" class="resizer"></div>
     </div>
     <div class="col-md-7" style="padding:0;">
-        <div style="padding:10px;font-size:16px;border-bottom:solid 1px #ddd;" class="navi">
+        <div style="padding:10px;font-size:16px;" class="navi">
             <a href="index.html#" class="tip zip" title="压缩"  data-placement="bottom"><i class="fa fa-database"></i></a>
             <a href="index.html#" class="tip shown"  title="显示行号"  data-placement="bottom"><i class="glyphicon glyphicon-sort-by-order"></i></a>
             <a href="index.html#" class="tip clear" title="清空"  data-placement="bottom"><i class="fa fa-trash"></i></a>
+            <a href="index.html#" class="tip undo" title="撤回"  data-placement="bottom"><i class="fa fa-undo"></i></a>
+            <a href="index.html#" class="tip copy" title="复制"  data-placement="bottom"><i class="fa fa-copy"></i></a>
+            <a href="index.html#" class="tip save-local" title="保存到本地"  data-placement="bottom"><i class="fa fa-download"></i></a>
+            <a href="index.html#" class="tip xml" title="转XML"  data-placement="bottom"><i class="fa fa-file-code-o"></i></a>
+            <a href="index.html#" class="tip ai-fix" title="AI智能修复"  data-placement="bottom"><i class="fa fa-magic"></i></a>
         </div>
         <div id="right-box"  style="height:679px;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none;overflow-y:scroll; outline:none;position:relative;">
             <div id="line-num" style="background-color:#fafafa;padding:0px 8px;float:left;border-right:dashed 1px #eee;display:none;z-index:-1;color:#999;position:absolute;text-align:center;over-flow:hidden;">
                 <div>0</div>
             </div>
-            <div class="ro" id="json-target" style="padding:0px 25px;over">
+            <div class="ro" id="json-target" style="padding:0px 25px;overflow:auto;">
             </div>
         </div>
         <form id="form-save" method="POST"><input type="hidden" value="" id="txt-content" name="content"></form>
@@ -78,12 +267,59 @@
 <script src="js/jquery.json2xml.js"></script>
 <script src="js/json2.js"></script>
 <script src="js/jsonlint.js"></script>
+<script src="js/json5.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
 <script src="js/jquery.numberedtextarea.js"></script>
+
+<!-- 重写numberedtextarea样式以防止发光效果 -->
+<style>
+/* 覆盖numberedtextarea边框和过渡效果 */
+div.numberedtextarea-wrapper {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+div.numberedtextarea-wrapper textarea {
+    border-right: solid 1px #ddd !important;
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: solid 1px #ddd !important;
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+div.numberedtextarea-line-numbers {
+    border-right: 1px dashed #eee !important;
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* 确保没有任何悬停状态的过渡效果 */
+div.numberedtextarea-wrapper:hover,
+div.numberedtextarea-wrapper:focus,
+div.numberedtextarea-wrapper:active,
+div.numberedtextarea-wrapper textarea:hover,
+div.numberedtextarea-wrapper textarea:focus,
+div.numberedtextarea-wrapper textarea:active {
+    border-color: #ddd !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: none !important;
+}
+</style>
+
 <script type="text/javascript">
 $('textarea').numberedtextarea();
 var current_json = '';
 var current_json_str = '';
+var last_json_src = ''; // 用于保存上一次的输入内容
 var xml_flag = false;
 var zip_flag = false;
 var shown_flag = false;
@@ -95,9 +331,16 @@ function init(){
     renderLine();
     $('.xml').attr('style','color:#999;');
     $('.zip').attr('style','color:#999;');
-
+    $('.copy').attr('style','color:#999;');
+    $('.undo').attr('style','color:#999;');
+    $('.ai-fix').attr('style','color:#999;');
 }
 $('#json-src').keyup(function(){
+    // 保存当前输入，用于撤回功能
+    if($(this).val() !== last_json_src) {
+        last_json_src = $(this).val();
+    }
+    
     init();
     var content = $.trim($(this).val());
     var result = '';
@@ -115,12 +358,71 @@ $('#json-src').keyup(function(){
             }
         }
         try{
-	    content = content.replace(/[\r\n]/g,"");
+            // 使用更宽松的JSON5解析器
+            try {
+                // 首先尝试使用JSON5解析
+                current_json = JSON5.parse(content);
+                current_json_str = JSON.stringify(current_json);
+                result = new JSONFormat(JSON.stringify(current_json), 4).toString();
+                showToast('使用宽松解析成功', 'success');
+            } catch(json5Error) {
+                // 如果JSON5解析失败，回退到原始方法
+                try {
+                    // 不再删除换行符，保留原始行号信息
             current_json = jsonlint.parse(content);
             current_json_str = JSON.stringify(current_json);
-            result = new JSONFormat(content,4).toString();
-        }catch(e){
-            result = '<span style="color: #f1592a;font-weight:bold;">' + e + '</span>';
+                    result = new JSONFormat(content, 4).toString();
+                } catch(e) {
+                    throw {
+                        message: e.toString(),
+                        original: content
+                    };
+                }
+            }
+        } catch(e) {
+            // 优化错误提示
+            var errorMsg = e.message || e.toString();
+            var originalContent = e.original || content;
+            
+            // 在解析错误时让AI修复按钮闪烁发光
+            $('.ai-fix').addClass('ai-fix-glow');
+            // 6秒后停止闪烁
+            setTimeout(function() {
+                $('.ai-fix').removeClass('ai-fix-glow');
+            }, 6000);
+            
+            // 尝试定位错误位置
+            var errorLineInfo = '';
+            var match = errorMsg.match(/line\s+(\d+)/i) || errorMsg.match(/在第(\d+)行/);
+            if (match && match[1]) {
+                var lineNum = parseInt(match[1]);
+                var contentLines = originalContent.split("\n");
+                var errorLine = contentLines[lineNum - 1] || '';
+                
+                if (errorLine) {
+                    // 不再重复显示行号，直接显示有问题的行内容
+                    errorLineInfo = '<div style="margin-top:10px;background:#ffecec;padding:10px;border-radius:4px;border-left:4px solid #f1592a;">' +
+                        '<pre style="margin:0;white-space:pre-wrap;word-break:break-all;">' + 
+                        escapeHtml(errorLine) + '</pre></div>';
+                }
+            }
+            
+            // 美化错误信息
+            var friendlyError = errorMsg
+                .replace(/Parse error on line (\d+):/g, '解析错误，位于第 $1 行:')
+                .replace(/Unexpected/g, '意外的')
+                .replace(/Expected/g, '应该是')
+                .replace(/\s?'([^']+)'\s?/g, ' <code>$1</code> ')
+                .replace(/\[\d+,\s*\d+\]/g, '')  // 移除位置信息 [1, 2] 这样的内容
+                .replace(/end of input/g, '输入结束');
+            
+            result = '<div style="color: #f1592a;font-weight:bold;">' + 
+                '<i class="fa fa-exclamation-circle" style="margin-right:5px;"></i>JSON解析错误:<div style="margin:10px 0 0 10px;">' + 
+                friendlyError + '</div>' + errorLineInfo + 
+                '<div style="margin-top:15px;font-weight:normal;color:#666;">' + 
+                '提示: 检查是否有<span style="color:#f1592a;font-weight:bold;">缺失</span>的引号、逗号或括号，以及<span style="color:#f1592a;font-weight:bold;">中文</span>引号、逗号或括号。' + 
+                '</div></div>';
+            
             current_json_str = result;
         }
 
@@ -131,15 +433,29 @@ $('#json-src').keyup(function(){
 
 });
 $('.xml').click(function(){
+    if(current_json_str && current_json_str !== '') {
     if (xml_flag) {
+            // 如果已经是XML模式，切换回JSON
         $('#json-src').keyup();
-    }else{
-        var result = $.json2xml(current_json);
-        $('#json-target').html('<textarea style="width:100%;height:100%;border:0;resize:none;">'+result+'</textarea>');
+            $(this).attr('style','color:#999;');
+            showToast('已切换回JSON格式');
+        } else {
+            // 转换为XML并显示
+            try {
+                var xmlString = $.json2xml(current_json);
+                // 美化XML
+                var formattedXml = formatXml(xmlString);
+                $('#json-target').html('<pre style="padding:10px;white-space:pre-wrap;word-wrap:break-word;">' + escapeHtml(formattedXml) + '</pre>');
         xml_flag = true;
         $(this).attr('style','color:#15b374;');
+                showToast('已转换为XML格式');
+            } catch (e) {
+                showToast('XML转换失败: ' + e.message, 'error');
+            }
+        }
+    } else {
+        showToast('没有可转换的内容', 'error');
     }
-
 });
 $('.shown').click(function(){
     if (!shown_flag) {
@@ -179,15 +495,731 @@ $('.zip').click(function(){
 
 });
 $('.clear').click(function(){
+     // 保存当前值用于撤回
+     if($('#json-src').val() !== '') {
+         last_json_src = $('#json-src').val();
+         $('.undo').attr('style','color:#15b374;');
+     }
+     
      $('#json-src').val('');
      $('#json-target').html('');
+     showToast('已清空内容');
 });
+$('.copy').click(function(){
+    if(current_json_str && current_json_str !== '') {
+        var tempTextarea = document.createElement('textarea');
+        var contentToCopy = '';
+        
+        if (xml_flag) {
+            // 如果当前是XML模式，复制XML内容
+            var xmlString = $.json2xml(current_json);
+            contentToCopy = formatXml(xmlString);
+        } else {
+            // 否则复制JSON内容
+            contentToCopy = zip_flag ? current_json_str : JSON.stringify(current_json, null, 4);
+        }
+        
+        tempTextarea.value = contentToCopy;
+        tempTextarea.style.position = 'absolute';
+        tempTextarea.style.left = '-9999px';
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
+        var successful = document.execCommand('copy');
+        document.body.removeChild(tempTextarea);
+        
+        if(successful) {
+            // 显示toast消息
+            showToast(xml_flag ? '已复制XML内容' : '已复制JSON内容');
+            $(this).attr('style','color:#15b374;');
+            setTimeout(function() {
+                $('.copy').attr('style','color:#999;');
+            }, 1000);
+        } else {
+            showToast('复制失败，请手动复制', 'error');
+        }
+    }
+});
+
+// 保存到本地功能
+$('.save-local').click(function(){
+    if(current_json_str && current_json_str !== '') {
+        // 确定文件内容和类型
+        var content = '';
+        var fileType = '';
+        var fileName = '';
+        
+        // 生成基于时间戳和内容的文件名
+        var timestamp = new Date().getTime();
+        var hashBase = timestamp + (Math.random().toString(36).substring(2, 8));
+        var fileNameBase = md5(hashBase).substring(0, 8) + '_' + timestamp;
+        
+        if (xml_flag) {
+            // 如果当前是XML模式，保存XML内容
+            var xmlString = $.json2xml(current_json);
+            content = formatXml(xmlString);
+            fileType = 'application/xml';
+            fileName = fileNameBase + '.xml';
+        } else {
+            // 否则保存JSON内容
+            content = zip_flag ? current_json_str : JSON.stringify(current_json, null, 4);
+            fileType = 'application/json';
+            fileName = fileNameBase + '.json';
+        }
+        
+        // 创建Blob对象
+        var blob = new Blob([content], {type: fileType});
+        
+        // 创建下载链接
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        
+        // 添加到文档并触发点击
+        document.body.appendChild(link);
+        link.click();
+        
+        // 清理DOM
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+        
+        // 显示提示并改变按钮颜色
+        // showToast(xml_flag ? 'XML已保存到本地' : 'JSON已保存到本地');
+        $(this).attr('style','color:#15b374;');
+        setTimeout(function() {
+            $('.save-local').attr('style','color:#999;');
+        }, 1000);
+    } else {
+        showToast('没有可保存的内容', 'error');
+    }
+});
+
+// MD5哈希函数
+function md5(string) {
+    function md5cycle(x, k) {
+        var a = x[0], b = x[1], c = x[2], d = x[3];
+        
+        a = ff(a, b, c, d, k[0], 7, -680876936);
+        d = ff(d, a, b, c, k[1], 12, -389564586);
+        c = ff(c, d, a, b, k[2], 17, 606105819);
+        b = ff(b, c, d, a, k[3], 22, -1044525330);
+        a = ff(a, b, c, d, k[4], 7, -176418897);
+        d = ff(d, a, b, c, k[5], 12, 1200080426);
+        c = ff(c, d, a, b, k[6], 17, -1473231341);
+        b = ff(b, c, d, a, k[7], 22, -45705983);
+        a = ff(a, b, c, d, k[8], 7, 1770035416);
+        d = ff(d, a, b, c, k[9], 12, -1958414417);
+        c = ff(c, d, a, b, k[10], 17, -42063);
+        b = ff(b, c, d, a, k[11], 22, -1990404162);
+        a = ff(a, b, c, d, k[12], 7, 1804603682);
+        d = ff(d, a, b, c, k[13], 12, -40341101);
+        c = ff(c, d, a, b, k[14], 17, -1502002290);
+        b = ff(b, c, d, a, k[15], 22, 1236535329);
+        
+        a = gg(a, b, c, d, k[1], 5, -165796510);
+        d = gg(d, a, b, c, k[6], 9, -1069501632);
+        c = gg(c, d, a, b, k[11], 14, 643717713);
+        b = gg(b, c, d, a, k[0], 20, -373897302);
+        a = gg(a, b, c, d, k[5], 5, -701558691);
+        d = gg(d, a, b, c, k[10], 9, 38016083);
+        c = gg(c, d, a, b, k[15], 14, -660478335);
+        b = gg(b, c, d, a, k[4], 20, -405537848);
+        a = gg(a, b, c, d, k[9], 5, 568446438);
+        d = gg(d, a, b, c, k[14], 9, -1019803690);
+        c = gg(c, d, a, b, k[3], 14, -187363961);
+        b = gg(b, c, d, a, k[8], 20, 1163531501);
+        a = gg(a, b, c, d, k[13], 5, -1444681467);
+        d = gg(d, a, b, c, k[2], 9, -51403784);
+        c = gg(c, d, a, b, k[7], 14, 1735328473);
+        b = gg(b, c, d, a, k[12], 20, -1926607734);
+        
+        a = hh(a, b, c, d, k[5], 4, -378558);
+        d = hh(d, a, b, c, k[8], 11, -2022574463);
+        c = hh(c, d, a, b, k[11], 16, 1839030562);
+        b = hh(b, c, d, a, k[14], 23, -35309556);
+        a = hh(a, b, c, d, k[1], 4, -1530992060);
+        d = hh(d, a, b, c, k[4], 11, 1272893353);
+        c = hh(c, d, a, b, k[7], 16, -155497632);
+        b = hh(b, c, d, a, k[10], 23, -1094730640);
+        a = hh(a, b, c, d, k[13], 4, 681279174);
+        d = hh(d, a, b, c, k[0], 11, -358537222);
+        c = hh(c, d, a, b, k[3], 16, -722521979);
+        b = hh(b, c, d, a, k[6], 23, 76029189);
+        a = hh(a, b, c, d, k[9], 4, -640364487);
+        d = hh(d, a, b, c, k[12], 11, -421815835);
+        c = hh(c, d, a, b, k[15], 16, 530742520);
+        b = hh(b, c, d, a, k[2], 23, -995338651);
+        
+        a = ii(a, b, c, d, k[0], 6, -198630844);
+        d = ii(d, a, b, c, k[7], 10, 1126891415);
+        c = ii(c, d, a, b, k[14], 15, -1416354905);
+        b = ii(b, c, d, a, k[5], 21, -57434055);
+        a = ii(a, b, c, d, k[12], 6, 1700485571);
+        d = ii(d, a, b, c, k[3], 10, -1894986606);
+        c = ii(c, d, a, b, k[10], 15, -1051523);
+        b = ii(b, c, d, a, k[1], 21, -2054922799);
+        a = ii(a, b, c, d, k[8], 6, 1873313359);
+        d = ii(d, a, b, c, k[15], 10, -30611744);
+        c = ii(c, d, a, b, k[6], 15, -1560198380);
+        b = ii(b, c, d, a, k[13], 21, 1309151649);
+        a = ii(a, b, c, d, k[4], 6, -145523070);
+        d = ii(d, a, b, c, k[11], 10, -1120210379);
+        c = ii(c, d, a, b, k[2], 15, 718787259);
+        b = ii(b, c, d, a, k[9], 21, -343485551);
+        
+        x[0] = add32(a, x[0]);
+        x[1] = add32(b, x[1]);
+        x[2] = add32(c, x[2]);
+        x[3] = add32(d, x[3]);
+    }
+    
+    function cmn(q, a, b, x, s, t) {
+        a = add32(add32(a, q), add32(x, t));
+        return add32((a << s) | (a >>> (32 - s)), b);
+    }
+    
+    function ff(a, b, c, d, x, s, t) {
+        return cmn((b & c) | ((~b) & d), a, b, x, s, t);
+    }
+    
+    function gg(a, b, c, d, x, s, t) {
+        return cmn((b & d) | (c & (~d)), a, b, x, s, t);
+    }
+    
+    function hh(a, b, c, d, x, s, t) {
+        return cmn(b ^ c ^ d, a, b, x, s, t);
+    }
+    
+    function ii(a, b, c, d, x, s, t) {
+        return cmn(c ^ (b | (~d)), a, b, x, s, t);
+    }
+    
+    function md51(s) {
+        var n = s.length,
+        state = [1732584193, -271733879, -1732584194, 271733878], i;
+        for (i = 64; i <= s.length; i += 64) {
+            md5cycle(state, md5blk(s.substring(i - 64, i)));
+        }
+        s = s.substring(i - 64);
+        var tail = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        for (i = 0; i < s.length; i++)
+            tail[i >> 2] |= s.charCodeAt(i) << ((i % 4) << 3);
+        tail[i >> 2] |= 0x80 << ((i % 4) << 3);
+        if (i > 55) {
+            md5cycle(state, tail);
+            for (i = 0; i < 16; i++) tail[i] = 0;
+        }
+        tail[14] = n * 8;
+        md5cycle(state, tail);
+        return state;
+    }
+    
+    function md5blk(s) {
+        var md5blks = [], i;
+        for (i = 0; i < 64; i += 4) {
+            md5blks[i >> 2] = s.charCodeAt(i) + (s.charCodeAt(i + 1) << 8) + (s.charCodeAt(i + 2) << 16) + (s.charCodeAt(i + 3) << 24);
+        }
+        return md5blks;
+    }
+    
+    var hex_chr = '0123456789abcdef'.split('');
+    
+    function rhex(n) {
+        var s = '', j = 0;
+        for (; j < 4; j++)
+            s += hex_chr[(n >> (j * 8 + 4)) & 0x0F] + hex_chr[(n >> (j * 8)) & 0x0F];
+        return s;
+    }
+    
+    function hex(x) {
+        for (var i = 0; i < x.length; i++)
+            x[i] = rhex(x[i]);
+        return x.join('');
+    }
+    
+    function add32(a, b) {
+        return (a + b) & 0xFFFFFFFF;
+    }
+    
+    return hex(md51(string));
+}
+
+function showToast(message, type) {
+    var toast = $('#toast-message');
+    $('#toast-text').text(message);
+    
+    if(type === 'error') {
+        toast.find('i').removeClass('fa-check-circle fa-info-circle').addClass('fa-times-circle').css('color', '#f1592a');
+    } else if(type === 'info') {
+        toast.find('i').removeClass('fa-check-circle fa-times-circle').addClass('fa-info-circle').css('color', '#3498db');
+    } else {
+        toast.find('i').removeClass('fa-times-circle fa-info-circle').addClass('fa-check-circle').css('color', '#15b374');
+    }
+    
+    toast.addClass('show');
+    
+    setTimeout(function() {
+        toast.removeClass('show');
+    }, 2000);
+}
+
 $('.save').click(function(){
     var content = JSON.stringify(current_json);
     $('#txt-content').val(content);
     $("#form-save").submit();
 });
+
+$('.undo').click(function(){
+    if(last_json_src !== '') {
+        $('#json-src').val(last_json_src);
+        $('#json-src').keyup(); // 触发解析
+        showToast('已恢复上次内容');
+        $(this).attr('style','color:#999;');
+    } else {
+        showToast('没有可撤回的内容', 'error');
+    }
+});
+
+// 格式化XML
+function formatXml(xml) {
+    var formatted = '';
+    var reg = /(>)(<)(\/*)/g;
+    xml = xml.replace(reg, '$1\r\n$2$3');
+    var pad = 0;
+    
+    xml.split('\r\n').forEach(function(node) {
+        var indent = 0;
+        if (node.match(/.+<\/\w[^>]*>$/)) {
+            indent = 0;
+        } else if (node.match(/^<\/\w/)) {
+            if (pad != 0) pad -= 1;
+        } else if (node.match(/^<\w[^>]*[^\/]>.*$/)) {
+            indent = 1;
+        } else {
+            indent = 0;
+        }
+
+        var padding = '';
+        for (var i = 0; i < pad; i++) {
+            padding += '  ';
+        }
+
+        formatted += padding + node + '\r\n';
+        pad += indent;
+    });
+
+    return formatted;
+}
+
+// 转义HTML标签
+function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// 防止点击输入框导致分割线突出
+$('#json-src').on('click focus', function(e) {
+    // 阻止事件冒泡
+    e.stopPropagation();
+});
+
+// 页面加载完成后自动触发解析和调整高度
+$(document).ready(function() {
+    // 触发解析默认JSON示例
+    $('#json-src').keyup();
+    
+    // 强制移除numberedtextarea的所有可能导致闪烁的样式
+    function fixNumberedTextarea() {
+        // 移除所有可能的过渡效果
+        $('.numberedtextarea-wrapper, .numberedtextarea-wrapper *, div.numberedtextarea-line-numbers, div.numberedtextarea-wrapper textarea').css({
+            'transition': 'none',
+            'animation': 'none',
+            'box-shadow': 'none',
+            'text-shadow': 'none',
+            'border-style': 'solid',
+            'outline': 'none'
+        });
+        
+        // 确保文本区域边框设置正确
+        $('.numberedtextarea-wrapper textarea').css({
+            'border-right': 'solid 1px #ddd',
+            'border-left': 'none',
+            'border-top': 'none',
+            'border-bottom': 'solid 1px #ddd'
+        });
+        
+        // 确保行号区域边框设置正确
+        $('.numberedtextarea-line-numbers').css({
+            'border-right': '1px dashed #eee',
+            'border': 'none',
+            'box-shadow': 'none'
+        });
+    }
+    
+    // 初始应用一次
+    fixNumberedTextarea();
+    
+    // 定期检查和修复（防止动态变化）
+    setInterval(fixNumberedTextarea, 200);
+    
+    // 在任何用户交互后都重新应用样式修复
+    $(document).on('click keyup focus blur', function() {
+        fixNumberedTextarea();
+    });
+    
+    // 调整高度以适应窗口
+    function adjustHeight() {
+        var windowHeight = $(window).height();
+        var headerHeight = $('.header').outerHeight();
+        $('main.row-fluid').css('height', (windowHeight - headerHeight) + 'px');
+        
+        // 确保numberedtextarea-wrapper也有正确的高度
+        $('.numberedtextarea-wrapper').css('height', '100%');
+        $('.numberedtextarea-wrapper textarea').css('height', '100%');
+        $('.numberedtextarea-line-numbers').css('height', '100%');
+    }
+    
+    // 初始调整和窗口大小变化时调整
+    adjustHeight();
+    $(window).resize(adjustHeight);
+    
+    // 文件上传处理
+    $('#file-upload').change(function(e) {
+        if (e.target.files.length > 0) {
+            var file = e.target.files[0];
+            
+            // 检查文件大小，限制在5MB以内
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('文件过大，请上传小于5MB的文件', 'error');
+                return;
+            }
+            
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    var content = event.target.result;
+                    $('#json-src').val(content);
+                    $('#json-src').keyup(); // 触发解析
+                    showToast('文件"' + file.name + '"已成功加载', 'success');
+                } catch (err) {
+                    showToast('无法读取文件', 'error');
+                }
+            };
+            reader.onerror = function() {
+                showToast('读取文件时发生错误', 'error');
+            };
+            reader.readAsText(file);
+        }
+    });
+    
+    // 完全重置分割线的风格和行为
+    (function initDivider() {
+        var $leftPanel = $('.col-md-5');
+        var $rightPanel = $('.col-md-7');
+        var $mainContainer = $('main.row-fluid');
+        var $divider = $('#divider');
+        var isDragging = false;
+        var startX, startLeftWidth;
+        
+        // 移除任何可能残留的事件监听器
+        $divider.off();
+        
+        // 确保分割线样式纯净
+        $divider.css({
+            'width': '6px',
+            'height': '100%',
+            'position': 'absolute',
+            'right': '0',
+            'top': '0',
+            'cursor': 'col-resize',
+            'z-index': '200',
+            'background': '#eee',
+            'border-left': '1px solid #ddd',
+            'border-right': '1px solid #ddd',
+            'box-shadow': 'none',
+            'transition': 'none',
+            'animation': 'none',
+            'text-shadow': 'none'
+        });
+        
+        // 重新绑定事件
+        $divider.on('mousedown', function(e) {
+            isDragging = true;
+            startX = e.pageX;
+            startLeftWidth = $leftPanel.width();
+            
+            $divider.css('background-color', '#ccc');
+            $('body').addClass('dragging');
+            
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        $(document).on('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            var mainWidth = $mainContainer.width();
+            var newLeftWidth = startLeftWidth + (e.pageX - startX);
+            
+            // 限制最小宽度
+            if (newLeftWidth < 200) newLeftWidth = 200;
+            if (mainWidth - newLeftWidth < 200) newLeftWidth = mainWidth - 200;
+            
+            // 计算百分比
+            var leftPercent = (newLeftWidth / mainWidth) * 100;
+            var rightPercent = 100 - leftPercent;
+            
+            // 设置新宽度
+            $leftPanel.css('width', leftPercent + '%');
+            $rightPanel.css('width', rightPercent + '%');
+            
+            // 触发窗口调整事件以重新计算各元素大小
+            $(window).trigger('resize');
+        });
+        
+        $(document).on('mouseup', function() {
+            if (isDragging) {
+                isDragging = false;
+                $divider.css('background-color', '#eee');
+                $('body').removeClass('dragging');
+            }
+        });
+        
+        // 阻止文本输入框的点击和聚焦事件传播
+        $('#json-src').on('click focus', function(e) {
+            e.stopPropagation();
+        });
+    })();
+});
+
+$('.ai-fix').click(function(){
+    var content = $.trim($('#json-src').val());
+    if(content == '') {
+        showToast('没有可修复的内容', 'error');
+        return;
+    }
+    
+    // 停止闪烁效果
+    $('.ai-fix').removeClass('ai-fix-glow');
+    
+    showToast('正在智能修复...', 'info');
+    
+    // 尝试智能修复JSON
+    var fixedJson = aiFixJson(content);
+    
+    if(fixedJson !== null) {
+        // 如果修复成功，更新输入区域
+        $('#json-src').val(fixedJson);
+        // 触发解析
 $('#json-src').keyup();
+        showToast('AI修复成功', 'success');
+        $(this).attr('style','color:#15b374;');
+        setTimeout(function() {
+            $('.ai-fix').attr('style','color:#999;');
+        }, 1500);
+    } else {
+        showToast('无法修复，请检查JSON格式', 'error');
+    }
+});
+
+// AI修复JSON函数
+function aiFixJson(content) {
+    try {
+        // 先尝试标准解析，如果成功就不需要修复
+        try {
+            JSON5.parse(content);
+            return content; // 已经是有效的JSON5
+        } catch (e) {
+            // 继续下面的修复流程
+        }
+        
+        // 1. 尝试处理前后有日志信息的情况
+        var jsonPattern = /(\{[\s\S]*\}|\[[\s\S]*\])/;
+        var matches = content.match(jsonPattern);
+        
+        if (matches && matches[1]) {
+            var extractedJson = matches[1];
+            try {
+                JSON5.parse(extractedJson);
+                return extractedJson; // 提取的内容是有效JSON
+            } catch (e) {
+                // 提取的内容还不是有效JSON，继续修复
+            }
+        }
+        
+        // 2. 检查并修复缺失的大括号和中括号
+        var openCurly = (content.match(/\{/g) || []).length;
+        var closeCurly = (content.match(/\}/g) || []).length;
+        var openSquare = (content.match(/\[/g) || []).length;
+        var closeSquare = (content.match(/\]/g) || []).length;
+        
+        // 检查是否缺少开头的大括号或中括号
+        var firstChar = content.trim().charAt(0);
+        var lastChar = content.trim().charAt(content.trim().length - 1);
+        var needOpeningCurly = false;
+        var needOpeningSquare = false;
+        
+        // 如果内容的第一个非空字符不是{或[，但是存在}或]，则可能需要添加开头括号
+        if (firstChar !== '{' && firstChar !== '[') {
+            // 如果有闭合括号，判断需要哪种开头括号
+            if (closeCurly > openCurly) {
+                needOpeningCurly = true;
+            } else if (closeSquare > openSquare) {
+                needOpeningSquare = true;
+            }
+            // 如果没有明显的括号不平衡，但内容像是一个对象
+            else if (content.includes(':') && !content.trim().startsWith('"') && !content.trim().startsWith("'")) {
+                needOpeningCurly = true;
+            }
+            // 如果看起来像是一个数组
+            else if (content.includes(',') && !content.includes(':')) {
+                needOpeningSquare = true;
+            }
+        }
+        
+        // 添加缺失的开头括号
+        if (needOpeningCurly) {
+            content = '{' + content;
+            openCurly++; // 更新括号计数
+        } else if (needOpeningSquare) {
+            content = '[' + content;
+            openSquare++; // 更新括号计数
+        }
+        
+        // 如果内容不以{或[开头，但包含它们，尝试找到第一个有效位置
+        if (!/^[\s]*[\{\[]/.test(content) && (openCurly > 0 || openSquare > 0)) {
+            var firstCurly = content.indexOf('{');
+            var firstSquare = content.indexOf('[');
+            
+            if (firstCurly >= 0 && (firstSquare < 0 || firstCurly < firstSquare)) {
+                content = content.substring(firstCurly);
+            } else if (firstSquare >= 0) {
+                content = content.substring(firstSquare);
+            }
+        }
+        
+        // 补全缺失的闭合大括号
+        if (openCurly > closeCurly) {
+            for (var i = 0; i < openCurly - closeCurly; i++) {
+                content += '}';
+            }
+        }
+        // 补全缺失的开头大括号（如果结尾有多余）
+        else if (closeCurly > openCurly) {
+            content = '{' + content;
+            // 如果添加了开头括号但仍然不平衡，继续添加
+            for (var i = 1; i < closeCurly - openCurly; i++) {
+                content = '{' + content;
+            }
+        }
+        
+        // 补全缺失的闭合中括号
+        if (openSquare > closeSquare) {
+            for (var i = 0; i < openSquare - closeSquare; i++) {
+                content += ']';
+            }
+        }
+        // 补全缺失的开头中括号（如果结尾有多余）
+        else if (closeSquare > openSquare) {
+            content = '[' + content;
+            // 如果添加了开头括号但仍然不平衡，继续添加
+            for (var i = 1; i < closeSquare - openSquare; i++) {
+                content = '[' + content;
+            }
+        }
+        
+        // 3. 尝试处理常见语法错误
+        // 移除行尾多余的逗号（JSON5已经支持，这里作为额外保障）
+        content = content.replace(/,(\s*[\}\]])/g, '$1');
+        
+        // 修复未闭合的引号
+        var fixedContent = fixUnclosedQuotes(content);
+        
+        // 最终验证
+        try {
+            JSON5.parse(fixedContent);
+            return fixedContent;
+        } catch (e) {
+            // 如果还是失败，最后尝试一种更激进的方式
+            try {
+                // 检查是否像是一个对象但没有括号
+                if (!fixedContent.trim().startsWith('{') && !fixedContent.trim().startsWith('[') &&
+                    fixedContent.includes(':')) {
+                    fixedContent = '{' + fixedContent + '}';
+                    // 再次尝试解析
+                    try {
+                        JSON5.parse(fixedContent);
+                        return fixedContent;
+                    } catch (err) {
+                        // 继续下面的尝试
+                    }
+                }
+                
+                // 尝试通过eval方式转换（仅用于修复，有潜在安全风险）
+                // 因为某些情况下，字符串中包含特殊字符或不规范的内容可能导致解析失败
+                var obj = eval('(' + fixedContent + ')');
+                return JSON.stringify(obj, null, 2);
+            } catch (evalError) {
+                // 如果所有方法都失败，最后一次尝试：
+                // 直接加上大括号包装整个内容
+                try {
+                    if (!fixedContent.trim().startsWith('{') && !fixedContent.trim().startsWith('[')) {
+                        fixedContent = '{' + fixedContent + '}';
+                        JSON5.parse(fixedContent);
+                        return fixedContent;
+                    }
+                } catch (finalError) {
+                    // 如果所有方法都失败，返回null
+                    return null;
+                }
+                return null;
+            }
+        }
+    } catch (e) {
+        console.error('AI修复过程发生错误:', e);
+        return null;
+    }
+}
+
+// 修复未闭合的引号
+function fixUnclosedQuotes(content) {
+    // 这里实现一个简单的引号修复逻辑
+    var lines = content.split('\n');
+    var inString = false;
+    var quoteChar = '';
+    
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var newLine = '';
+        
+        for (var j = 0; j < line.length; j++) {
+            var char = line[j];
+            newLine += char;
+            
+            if ((char === '"' || char === "'") && (j === 0 || line[j-1] !== '\\')) {
+                if (!inString) {
+                    inString = true;
+                    quoteChar = char;
+                } else if (char === quoteChar) {
+                    inString = false;
+                }
+            }
+        }
+        
+        // 如果这一行结束时还在字符串内，添加结束引号
+        if (inString) {
+            newLine += quoteChar;
+            inString = false;
+        }
+        
+        lines[i] = newLine;
+    }
+    
+    return lines.join('\n');
+}
 </script>
 </body>
 </html>
