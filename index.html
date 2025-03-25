@@ -51,8 +51,9 @@
         /* 语言选择器样式 */
         .language-selector {
             position: absolute;
-            top: 10px;
+            top: 50%;
             right: 20px;
+            transform: translateY(-50%);
             z-index: 100;
         }
         
@@ -315,6 +316,16 @@
         .ro .json-line:last-child {
             margin-bottom: 50px !important;
         }
+
+        .navi {
+            /* display: flex; */
+            align-items: center;
+            margin-right: 125px; 
+
+        .navi a {
+            margin-right: 1px;
+            white-space: nowrap; /* 防止文本换行 */
+        }
     </style>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -331,7 +342,7 @@
             <a class="logo" href="index.html">hi<span style="color:#555;">json.com</span></a>
 
         </div>
-        <nav class="col-md-7" style="padding:10px 0;"  align="right">
+        <nav class="col-md-7" style="position: relative; padding: 10px 0;"  align="right">
             <div  class="navi">
                 <a href="index.html" data-placement="bottom">在线解析</a>
                 
@@ -463,6 +474,12 @@ div.numberedtextarea-wrapper textarea:active {
 // 多语言文本定义
 const i18n = {
     'zh': {  // 中文
+        'navItems': {
+            'onlineParse': '在线解析',
+            'whatIsJson': '什么是Json',
+            'parseCode': 'Json解析代码',
+            'components': 'Json组件'
+        },
         'upload': '上传',
         'compression': '压缩',
         'showLineNumbers': '显示行号',
@@ -494,6 +511,12 @@ const i18n = {
         'inputPlaceholder': '在此输入json字符串或XML字符串...'
     },
     'en': {  // 英文
+        'navItems': {
+            'onlineParse': 'Online Parse',
+            'whatIsJson': 'What is Json',
+            'parseCode': 'Parse Code',
+            'components': 'Components'
+        },
         'upload': 'Upload',
         'compression': 'Compress',
         'showLineNumbers': 'Show Line Numbers',
@@ -525,6 +548,12 @@ const i18n = {
         'inputPlaceholder': 'Enter JSON or XML string here...'
     },
     'ja': {  // 日文
+        'navItems': {
+            'onlineParse': 'オンライン解析',
+            'whatIsJson': 'Jsonとは',
+            'parseCode': '解析コード',
+            'components': 'コンポーネント'
+        },
         'upload': 'アップロード',
         'compression': '圧縮',
         'showLineNumbers': '行番号の表示',
@@ -556,6 +585,12 @@ const i18n = {
         'inputPlaceholder': 'ここにJSONまたはXML文字列を入力してください...'
     },
     'ko': {  // 韩文
+        'navItems': {
+            'onlineParse': '온라인 파싱',
+            'whatIsJson': 'Json이란',
+            'parseCode': '파싱 코드',
+            'components': '컴포넌트'
+        },
         'upload': '업로드',
         'compression': '압축',
         'showLineNumbers': '줄 번호 표시',
@@ -613,6 +648,20 @@ function changeLanguage(lang) {
 
 // 更新UI文本
 function updateUIText() {
+    // 更新导航栏文本
+    $('.navi a').each(function() {
+        var $link = $(this);
+        if ($link.attr('href') === 'index.html') {
+            $link.text(i18n[currentLang].navItems.onlineParse);
+        } else if ($link.attr('href') === 'wiki.html') {
+            $link.text(i18n[currentLang].navItems.whatIsJson);
+        } else if ($link.attr('href') === 'code.html') {
+            $link.text(i18n[currentLang].navItems.parseCode);
+        } else if ($link.attr('href') === 'component.html') {
+            $link.text(i18n[currentLang].navItems.components);
+        }
+    });
+
     // 更新工具栏提示
     $('.zip').attr('title', i18n[currentLang].compression);
     $('.shown').attr('title', i18n[currentLang].showLineNumbers);
