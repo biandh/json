@@ -66,3 +66,114 @@
 ## 在线访问
 
 访问 [hijson.com](https://hijson.com) 立即使用此工具
+
+# JSON 在线解析工具
+
+一个简单易用的 JSON 在线解析、格式化、验证工具。支持 JSON 与 XML 相互转换，并提供 AI 智能修复功能。
+
+## 功能特点
+
+- JSON 在线解析和格式化
+- JSON 语法验证
+- JSON 压缩
+- JSON 与 XML 相互转换
+- AI 智能修复
+- 多语言支持（中文、英文、日文、韩文）
+- 支持文件上传
+- 支持复制到剪贴板
+- 支持保存到本地
+
+## 部署说明
+
+### 环境要求
+
+- Nginx 1.18 或更高版本
+- 支持静态文件服务
+
+### 部署步骤
+
+1. **安装 Nginx**
+
+   Ubuntu/Debian:
+   ```bash
+   sudo apt update
+   sudo apt install nginx
+   ```
+
+   CentOS:
+   ```bash
+   sudo yum install nginx
+   ```
+
+2. **配置网站文件**
+
+   - 创建网站目录：
+     ```bash
+     sudo mkdir -p /var/www/json-parser
+     ```
+
+   - 复制网站文件到该目录：
+     ```bash
+     sudo cp -r * /var/www/json-parser/
+     ```
+
+   - 设置目录权限：
+     ```bash
+     sudo chown -R www-data:www-data /var/www/json-parser
+     sudo chmod -R 755 /var/www/json-parser
+     ```
+
+3. **配置 Nginx**
+
+   - 复制配置文件：
+     ```bash
+     sudo cp nginx.conf /etc/nginx/conf.d/json-parser.conf
+     ```
+
+   - 修改配置文件中的域名和路径：
+     ```bash
+     sudo nano /etc/nginx/conf.d/json-parser.conf
+     ```
+     
+     将以下内容替换为你的实际配置：
+     ```nginx
+     server_name your-domain.com;  # 替换为你的域名
+     root /var/www/json-parser;    # 替换为你的网站目录
+     ```
+
+4. **测试配置**
+
+   ```bash
+   sudo nginx -t
+   ```
+
+5. **重启 Nginx**
+
+   ```bash
+   sudo systemctl restart nginx
+   ```
+
+### 访问网站
+
+- 如果使用域名：直接访问 `http://your-domain.com`
+- 如果使用 IP：访问 `http://your-server-ip`
+
+## 注意事项
+
+1. 确保服务器防火墙允许 80 端口访问
+2. 如果使用域名，需要正确配置 DNS 解析
+3. 建议配置 HTTPS 以提供更安全的访问
+
+## 维护说明
+
+- 日志文件位置：`/var/log/nginx/`
+- 配置文件位置：`/etc/nginx/conf.d/json-parser.conf`
+- 网站文件位置：`/var/www/json-parser/`
+
+## 技术支持
+
+如有问题，请提交 Issue 或联系技术支持。
+
+## 许可证
+
+MIT License
