@@ -22,7 +22,7 @@
     <style>
         .toast-message {
             position: fixed;
-            top: 20px;
+            top: 60px;  /* 从20px改为60px，确保在语言切换器下方 */
             right: 20px;
             background-color: #333;
             color: #fff;
@@ -46,6 +46,71 @@
         .navi a.tip {
             /* margin-right: 8px; */
             padding: 0px 8px;
+        }
+        
+        /* 语言选择器样式 */
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .language-selector select {
+            padding: 6px 30px 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background-color: #ffffff;
+            cursor: pointer;
+            color: #333;
+            font-size: 13px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 16px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .language-selector select:hover {
+            border-color: #ccc;
+            background-color: #f8f8f8;
+        }
+        
+        .language-selector select:focus {
+            outline: none;
+            border-color: #15b374;
+            box-shadow: 0 0 0 3px rgba(21, 179, 116, 0.1);
+        }
+        
+        /* 美化下拉选项 */
+        .language-selector select option {
+            padding: 8px;
+            background-color: #fff;
+            color: #333;
+        }
+        
+        /* 适配深色模式 */
+        @media (prefers-color-scheme: dark) {
+            .language-selector select {
+                background-color: #2d2d2d;
+                border-color: #404040;
+                color: #e0e0e0;
+                background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e0e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            }
+            
+            .language-selector select:hover {
+                background-color: #353535;
+                border-color: #505050;
+            }
+            
+            .language-selector select option {
+                background-color: #2d2d2d;
+                color: #e0e0e0;
+            }
         }
         
         /* AI修复按钮闪烁效果 */
@@ -93,6 +158,7 @@
         
         #right-box {
             height: calc(100% - 37px) !important;
+            overflow-y: auto !important;
         }
         
         /* 修复numberedtextarea相关样式 */
@@ -141,18 +207,23 @@
             right: 11px;
             z-index: 100;
             background-color: #f0f0f0;
-            border-radius: 4px;
-            padding: 5px 8px;
+            border-radius: 3px;
+            padding: 3px 6px;
             cursor: pointer;
             color: #777;
             border: 1px solid #ddd;
-            font-size: 14px;
+            font-size: 12px;
             transition: all 0.2s ease;
         }
         
         .upload-btn:hover {
             background-color: #e9ecef;
             color: #333;
+        }
+        
+        .upload-btn i {
+            font-size: 11px;
+            margin-right: 2px;
         }
         
         /* 隐藏文件输入 */
@@ -196,6 +267,54 @@
             -ms-user-select: none;
             cursor: col-resize !important;
         }
+        
+        /* 修改行号样式，移除方框 */
+        div.numberedtextarea-number {
+            padding-right: 6px !important;
+            text-align: right !important;
+            border: none !important;
+            background: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            box-sizing: content-box !important;
+            overflow: hidden !important;
+            display: block !important;
+            float: none !important;
+            width: auto !important;
+            height: auto !important;
+            position: static !important;
+            line-height: 20px !important;
+        }
+        
+        /* 彻底移除行号的方框样式 */
+        div.numberedtextarea-number,
+        .numberedtextarea-line-numbers div {
+            padding-right: 6px !important;
+            text-align: right !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            font-size: inherit !important;
+            line-height: 20px !important;
+            display: block !important;
+            color: #999 !important;
+        }
+        
+        /* 确保内容完整显示 */
+        #json-target {
+            padding-bottom: 50px !important;
+        }
+        
+        /* JSON格式化内容样式优化 */
+        .ro ol.json-lines {
+            margin-bottom: 50px !important;
+        }
+        
+        .ro .json-line:last-child {
+            margin-bottom: 50px !important;
+        }
     </style>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -220,6 +339,14 @@
                 <a href="code.html"  data-placement="bottom">Json解析代码</a>
                 <a href="component.html"  data-placement="bottom">Json组件</a>
 
+            </div>
+             <div class="language-selector">
+                <select id="language-select" onchange="changeLanguage(this.value)">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                    <option value="ko">한국어</option>
+                </select>
             </div>
         </nav>
         <br style="clear:both;" />
@@ -246,13 +373,14 @@
             <a href="index.html#" class="tip copy" title="复制"  data-placement="bottom"><i class="fa fa-copy"></i></a>
             <a href="index.html#" class="tip save-local" title="保存到本地"  data-placement="bottom"><i class="fa fa-download"></i></a>
             <a href="index.html#" class="tip xml" title="转XML"  data-placement="bottom"><i class="fa fa-file-code-o"></i></a>
+            <a href="index.html#" class="tip py-test" title="测试Python语法"  data-placement="bottom"><i class="fa fa-flask"></i></a>
             <a href="index.html#" class="tip ai-fix" title="AI智能修复"  data-placement="bottom"><i class="fa fa-magic"></i></a>
         </div>
         <div id="right-box"  style="height:679px;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none;overflow-y:scroll; outline:none;position:relative;">
             <div id="line-num" style="background-color:#fafafa;padding:0px 8px;float:left;border-right:dashed 1px #eee;display:none;z-index:-1;color:#999;position:absolute;text-align:center;over-flow:hidden;">
                 <div>0</div>
             </div>
-            <div class="ro" id="json-target" style="padding:0px 25px;overflow:auto;">
+            <div class="ro" id="json-target" style="padding:0px 25px 50px 25px;overflow:auto;">
             </div>
         </div>
         <form id="form-save" method="POST"><input type="hidden" value="" id="txt-content" name="content"></form>
@@ -301,6 +429,22 @@ div.numberedtextarea-line-numbers {
     outline: none !important;
 }
 
+/* 彻底移除行号的方框样式 */
+div.numberedtextarea-number,
+.numberedtextarea-line-numbers div {
+    padding-right: 6px !important;
+    text-align: right !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    font-size: inherit !important;
+    line-height: 20px !important;
+    display: block !important;
+    color: #999 !important;
+}
+
 /* 确保没有任何悬停状态的过渡效果 */
 div.numberedtextarea-wrapper:hover,
 div.numberedtextarea-wrapper:focus,
@@ -316,6 +460,272 @@ div.numberedtextarea-wrapper textarea:active {
 </style>
 
 <script type="text/javascript">
+// 多语言文本定义
+const i18n = {
+    'zh': {  // 中文
+        'upload': '上传',
+        'compression': '压缩',
+        'showLineNumbers': '显示行号',
+        'clear': '清空',
+        'undo': '撤回',
+        'copy': '复制',
+        'saveToLocal': '保存到本地',
+        'convertToXml': '转XML',
+        'testPythonSyntax': '测试Python语法',
+        'aiFix': 'AI智能修复',
+        'jsonParseError': 'JSON解析错误:',
+        'errorHint': '提示: 检查是否有<span style="color:#f1592a;font-weight:bold;">缺失</span>的引号、逗号或括号，以及<span style="color:#f1592a;font-weight:bold;">中文</span>引号、逗号或括号。',
+        'parseErrorAtLine': '解析错误，位于第 $1 行:',
+        'unexpectedToken': '意外的',
+        'expectedToken': '应该是',
+        'endOfInput': '输入结束',
+        'errorMessages': {
+            'xmlConvertFailed': 'XML转换失败: $1',
+            'noContentToConvert': '没有可转换的内容',
+            'copyFailed': '复制失败，请手动复制',
+            'noContentToSave': '没有可保存的内容',
+            'noContentToUndo': '没有可撤回的内容',
+            'fileTooLarge': '文件过大，请上传小于5MB的文件',
+            'cannotReadFile': '无法读取文件',
+            'errorReadingFile': '读取文件时发生错误',
+            'noContentToFix': '没有可修复的内容',
+            'cannotFix': '无法修复，请检查JSON格式'
+        },
+        'inputPlaceholder': '在此输入json字符串或XML字符串...'
+    },
+    'en': {  // 英文
+        'upload': 'Upload',
+        'compression': 'Compress',
+        'showLineNumbers': 'Show Line Numbers',
+        'clear': 'Clear',
+        'undo': 'Undo',
+        'copy': 'Copy',
+        'saveToLocal': 'Save',
+        'convertToXml': 'Convert to XML',
+        'testPythonSyntax': 'Test Python Syntax',
+        'aiFix': 'AI Fix',
+        'jsonParseError': 'JSON Parse Error:',
+        'errorHint': 'Hint: Check for <span style="color:#f1592a;font-weight:bold;">missing</span> quotes, commas, or brackets.',
+        'parseErrorAtLine': 'Parse error on line $1:',
+        'unexpectedToken': 'Unexpected',
+        'expectedToken': 'Expected',
+        'endOfInput': 'end of input',
+        'errorMessages': {
+            'xmlConvertFailed': 'XML conversion failed: $1',
+            'noContentToConvert': 'No content to convert',
+            'copyFailed': 'Copy failed, please copy manually',
+            'noContentToSave': 'No content to save',
+            'noContentToUndo': 'No content to undo',
+            'fileTooLarge': 'File too large, please upload a file smaller than 5MB',
+            'cannotReadFile': 'Cannot read file',
+            'errorReadingFile': 'Error reading file',
+            'noContentToFix': 'No content to fix',
+            'cannotFix': 'Cannot fix, please check JSON format'
+        },
+        'inputPlaceholder': 'Enter JSON or XML string here...'
+    },
+    'ja': {  // 日文
+        'upload': 'アップロード',
+        'compression': '圧縮',
+        'showLineNumbers': '行番号の表示',
+        'clear': 'クリア',
+        'undo': '元に戻す',
+        'copy': 'コピー',
+        'saveToLocal': '保存',
+        'convertToXml': 'XMLに変換',
+        'testPythonSyntax': 'Python構文テスト',
+        'aiFix': 'AI修正',
+        'jsonParseError': 'JSON解析エラー:',
+        'errorHint': 'ヒント: 引用符、カンマ、または括弧が<span style="color:#f1592a;font-weight:bold;">不足</span>していないか確認してください。',
+        'parseErrorAtLine': '行$1で解析エラー:',
+        'unexpectedToken': '予期しない',
+        'expectedToken': '予期される',
+        'endOfInput': '入力の終了',
+        'errorMessages': {
+            'xmlConvertFailed': 'XML変換に失敗しました: $1',
+            'noContentToConvert': '変換するコンテンツがありません',
+            'copyFailed': 'コピーに失敗しました、手動でコピーしてください',
+            'noContentToSave': '保存するコンテンツがありません',
+            'noContentToUndo': '元に戻すコンテンツがありません',
+            'fileTooLarge': 'ファイルが大きすぎます、5MB未満のファイルをアップロードしてください',
+            'cannotReadFile': 'ファイルを読み込めません',
+            'errorReadingFile': 'ファイル読み込み中にエラーが発生しました',
+            'noContentToFix': '修正するコンテンツがありません',
+            'cannotFix': '修正できません、JSON形式を確認してください'
+        },
+        'inputPlaceholder': 'ここにJSONまたはXML文字列を入力してください...'
+    },
+    'ko': {  // 韩文
+        'upload': '업로드',
+        'compression': '압축',
+        'showLineNumbers': '줄 번호 표시',
+        'clear': '지우기',
+        'undo': '되돌리기',
+        'copy': '복사',
+        'saveToLocal': '저장',
+        'convertToXml': 'XML로 변환',
+        'testPythonSyntax': 'Python 구문 테스트',
+        'aiFix': 'AI 수정',
+        'jsonParseError': 'JSON 구문 오류:',
+        'errorHint': '힌트: 따옴표, 쉼표 또는 괄호가 <span style="color:#f1592a;font-weight:bold;">누락</span>되었는지 확인하세요.',
+        'parseErrorAtLine': '$1번 줄에서 구문 오류:',
+        'unexpectedToken': '예상치 않은',
+        'expectedToken': '예상된',
+        'endOfInput': '입력 끝',
+        'errorMessages': {
+            'xmlConvertFailed': 'XML 변환 실패: $1',
+            'noContentToConvert': '변환할 내용이 없습니다',
+            'copyFailed': '복사 실패, 수동으로 복사하세요',
+            'noContentToSave': '저장할 내용이 없습니다',
+            'noContentToUndo': '되돌릴 내용이 없습니다',
+            'fileTooLarge': '파일이 너무 큽니다. 5MB 미만의 파일을 업로드하세요',
+            'cannotReadFile': '파일을 읽을 수 없습니다',
+            'errorReadingFile': '파일 읽기 오류',
+            'noContentToFix': '수정할 내용이 없습니다',
+            'cannotFix': '수정할 수 없습니다. JSON 형식을 확인하세요'
+        },
+        'inputPlaceholder': '여기에 JSON 또는 XML 문자열을 입력하세요...'
+    }
+};
+
+// 当前语言
+let currentLang = 'zh';
+
+// 切换语言方法
+function changeLanguage(lang) {
+    currentLang = lang;
+    
+    // 更新UI元素文本
+    updateUIText();
+    
+    // 保存语言选择到localStorage
+    localStorage.setItem('preferredLanguage', lang);
+    
+    // 如果需要，重新格式化当前JSON
+    if (current_json_str && current_json_str !== '' && !xml_flag) {
+        try {
+            $('#json-target').html(new JSONFormat(JSON.stringify(current_json), 4).toString());
+        } catch (e) {
+            // 如果重新格式化失败，保持原样
+        }
+    }
+}
+
+// 更新UI文本
+function updateUIText() {
+    // 更新工具栏提示
+    $('.zip').attr('title', i18n[currentLang].compression);
+    $('.shown').attr('title', i18n[currentLang].showLineNumbers);
+    $('.clear').attr('title', i18n[currentLang].clear);
+    $('.undo').attr('title', i18n[currentLang].undo);
+    $('.copy').attr('title', i18n[currentLang].copy);
+    $('.save-local').attr('title', i18n[currentLang].saveToLocal);
+    $('.xml').attr('title', i18n[currentLang].convertToXml);
+    $('.py-test').attr('title', i18n[currentLang].testPythonSyntax);
+    $('.ai-fix').attr('title', i18n[currentLang].aiFix);
+    
+    // 更新上传按钮文本
+    $('.upload-btn i').next().text(i18n[currentLang].upload);
+    
+    // 更新输入框占位符
+    $('#json-src').attr('placeholder', i18n[currentLang].inputPlaceholder);
+    
+    // 应用提示框以重新初始化tooltip
+    $('.tip').tooltip('destroy').tooltip();
+}
+
+// 获取i18n文本
+function getText(key, params) {
+    let text = i18n[currentLang][key];
+    
+    // 如果是嵌套的错误消息
+    if (key.includes('.')) {
+        const parts = key.split('.');
+        text = i18n[currentLang][parts[0]][parts[1]];
+    }
+    
+    // 替换参数 ($1, $2 等)
+    if (params && text) {
+        params.forEach((param, index) => {
+            text = text.replace('$' + (index + 1), param);
+        });
+    }
+    
+    return text || key;
+}
+
+// 显示本地化的Toast消息
+function showToast(message, type) {
+    var toast = $('#toast-message');
+    
+    // 检查是否是错误消息关键字
+    if (i18n[currentLang].errorMessages && i18n[currentLang].errorMessages[message]) {
+        $('#toast-text').text(i18n[currentLang].errorMessages[message]);
+    } else if (message.includes(':')) {
+        // 处理带有参数的消息，如 "XML转换失败: someError"
+        const parts = message.split(':');
+        const key = parts[0].trim();
+        const param = parts[1].trim();
+        
+        // 查找对应的翻译
+        for (const errKey in i18n[currentLang].errorMessages) {
+            if (i18n[currentLang].errorMessages[errKey].includes(':')) {
+                const keyBase = i18n[currentLang].errorMessages[errKey].split(':')[0].trim();
+                if (keyBase === key) {
+                    $('#toast-text').text(getText('errorMessages.' + errKey, [param]));
+                    break;
+                }
+            }
+        }
+    } else {
+        // 直接显示消息
+        $('#toast-text').text(message);
+    }
+    
+    if(type === 'error') {
+        toast.find('i').removeClass('fa-check-circle fa-info-circle').addClass('fa-times-circle').css('color', '#f1592a');
+    } else if(type === 'info') {
+        toast.find('i').removeClass('fa-check-circle fa-times-circle').addClass('fa-info-circle').css('color', '#3498db');
+    } else {
+        toast.find('i').removeClass('fa-times-circle fa-info-circle').addClass('fa-check-circle').css('color', '#15b374');
+    }
+    
+    toast.addClass('show');
+    
+    setTimeout(function() {
+        toast.removeClass('show');
+    }, 2000);
+}
+
+// 覆盖 numberedtextarea 的默认样式
+(function($) {
+    // 保存原始的 numberedtextarea 方法
+    var originalNumberedTextarea = $.fn.numberedtextarea;
+    
+    // 重写 numberedtextarea 方法
+    $.fn.numberedtextarea = function(options) {
+        // 调用原始方法
+        var result = originalNumberedTextarea.apply(this, arguments);
+        
+        // 立即应用无方框样式
+        setTimeout(function() {
+            $('div.numberedtextarea-number').css({
+                'border': 'none !important',
+                'background': 'none !important',
+                'box-shadow': 'none !important',
+                'border-radius': '0 !important',
+                'margin': '0 !important',
+                'padding-right': '6px !important',
+                'text-align': 'right !important',
+                'color': '#999 !important',
+                'line-height': '20px !important'
+            });
+        }, 0);
+        
+        return result;
+    };
+})(jQuery);
+
 $('textarea').numberedtextarea();
 var current_json = '';
 var current_json_str = '';
@@ -364,7 +774,6 @@ $('#json-src').keyup(function(){
                 current_json = JSON5.parse(content);
                 current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(JSON.stringify(current_json), 4).toString();
-                showToast('使用宽松解析成功', 'success');
             } catch(json5Error) {
                 // 如果JSON5解析失败，回退到原始方法
                 try {
@@ -409,24 +818,27 @@ $('#json-src').keyup(function(){
             
             // 美化错误信息
             var friendlyError = errorMsg
-                .replace(/Parse error on line (\d+):/g, '解析错误，位于第 $1 行:')
-                .replace(/Unexpected/g, '意外的')
-                .replace(/Expected/g, '应该是')
+                .replace(/Parse error on line (\d+):/g, getText('parseErrorAtLine', [match ? match[1] : ""]))
+                .replace(/Unexpected/g, getText('unexpectedToken'))
+                .replace(/Expected/g, getText('expectedToken'))
                 .replace(/\s?'([^']+)'\s?/g, ' <code>$1</code> ')
                 .replace(/\[\d+,\s*\d+\]/g, '')  // 移除位置信息 [1, 2] 这样的内容
-                .replace(/end of input/g, '输入结束');
+                .replace(/end of input/g, getText('endOfInput'));
             
             result = '<div style="color: #f1592a;font-weight:bold;">' + 
-                '<i class="fa fa-exclamation-circle" style="margin-right:5px;"></i>JSON解析错误:<div style="margin:10px 0 0 10px;">' + 
+                '<i class="fa fa-exclamation-circle" style="margin-right:5px;"></i>' + getText('jsonParseError') + '<div style="margin:10px 0 0 10px;">' + 
                 friendlyError + '</div>' + errorLineInfo + 
                 '<div style="margin-top:15px;font-weight:normal;color:#666;">' + 
-                '提示: 检查是否有<span style="color:#f1592a;font-weight:bold;">缺失</span>的引号、逗号或括号，以及<span style="color:#f1592a;font-weight:bold;">中文</span>引号、逗号或括号。' + 
+                getText('errorHint') + 
                 '</div></div>';
             
             current_json_str = result;
         }
 
         $('#json-target').html(result);
+        
+        // 确保内容底部有足够空间
+        ensureBottomSpaceForJson();
     }else{
         $('#json-target').html('');
     }
@@ -438,7 +850,6 @@ $('.xml').click(function(){
             // 如果已经是XML模式，切换回JSON
         $('#json-src').keyup();
             $(this).attr('style','color:#999;');
-            showToast('已切换回JSON格式');
         } else {
             // 转换为XML并显示
             try {
@@ -448,13 +859,12 @@ $('.xml').click(function(){
                 $('#json-target').html('<pre style="padding:10px;white-space:pre-wrap;word-wrap:break-word;">' + escapeHtml(formattedXml) + '</pre>');
         xml_flag = true;
         $(this).attr('style','color:#15b374;');
-                showToast('已转换为XML格式');
             } catch (e) {
-                showToast('XML转换失败: ' + e.message, 'error');
-            }
+                showToast(getText('errorMessages.xmlConvertFailed', [e.message]), 'error');
+    }
         }
     } else {
-        showToast('没有可转换的内容', 'error');
+        showToast(getText('errorMessages.noContentToConvert'), 'error');
     }
 });
 $('.shown').click(function(){
@@ -464,6 +874,10 @@ $('.shown').click(function(){
         $('#json-target').attr("style","padding:0px 50px;");
         $('#line-num').show();
         $('.numberedtextarea-line-numbers').show();
+        
+        // 应用自定义样式到行号
+        applyLineNumberStyles();
+        
         shown_flag = true;
         $(this).attr('style','color:#15b374;');
     }else{
@@ -475,6 +889,23 @@ $('.shown').click(function(){
         $(this).attr('style','color:#999;');
     }
 });
+
+// 应用自定义样式到行号
+function applyLineNumberStyles() {
+    // 移除行号的方框样式
+    $('.numberedtextarea-number, .numberedtextarea-line-numbers div').css({
+        'border': 'none',
+        'background': 'transparent',
+        'box-shadow': 'none',
+        'border-radius': '0',
+        'margin': '0',
+        'padding-right': '6px',
+        'text-align': 'right',
+        'color': '#999',
+        'line-height': '20px'
+    });
+}
+
 function renderLine(){
     var line_num = $('#json-target').height()/20;
     $('#line-num').html("");
@@ -503,7 +934,8 @@ $('.clear').click(function(){
      
      $('#json-src').val('');
      $('#json-target').html('');
-     showToast('已清空内容');
+     // 移除成功清空提示
+     // showToast('已清空内容');
 });
 $('.copy').click(function(){
     if(current_json_str && current_json_str !== '') {
@@ -528,14 +960,14 @@ $('.copy').click(function(){
         document.body.removeChild(tempTextarea);
         
         if(successful) {
-            // 显示toast消息
+            // 保留复制成功提示
             showToast(xml_flag ? '已复制XML内容' : '已复制JSON内容');
             $(this).attr('style','color:#15b374;');
             setTimeout(function() {
                 $('.copy').attr('style','color:#999;');
             }, 1000);
         } else {
-            showToast('复制失败，请手动复制', 'error');
+            showToast(getText('errorMessages.copyFailed'), 'error');
         }
     }
 });
@@ -589,7 +1021,7 @@ $('.save-local').click(function(){
             $('.save-local').attr('style','color:#999;');
         }, 1000);
     } else {
-        showToast('没有可保存的内容', 'error');
+        showToast(getText('errorMessages.noContentToSave'), 'error');
     }
 });
 
@@ -772,7 +1204,8 @@ $('.undo').click(function(){
     if(last_json_src !== '') {
         $('#json-src').val(last_json_src);
         $('#json-src').keyup(); // 触发解析
-        showToast('已恢复上次内容');
+        // 移除恢复成功提示
+        // showToast('已恢复上次内容');
         $(this).attr('style','color:#999;');
     } else {
         showToast('没有可撤回的内容', 'error');
@@ -829,7 +1262,7 @@ $('#json-src').on('click focus', function(e) {
 // 页面加载完成后自动触发解析和调整高度
 $(document).ready(function() {
     // 触发解析默认JSON示例
-    $('#json-src').keyup();
+$('#json-src').keyup();
     
     // 强制移除numberedtextarea的所有可能导致闪烁的样式
     function fixNumberedTextarea() {
@@ -857,6 +1290,9 @@ $(document).ready(function() {
             'border': 'none',
             'box-shadow': 'none'
         });
+        
+        // 应用行号样式
+        applyLineNumberStyles();
     }
     
     // 初始应用一次
@@ -870,6 +1306,10 @@ $(document).ready(function() {
         fixNumberedTextarea();
     });
     
+    // 特别强制应用行号样式
+    setTimeout(applyLineNumberStyles, 500);
+    setTimeout(applyLineNumberStyles, 1000);
+    
     // 调整高度以适应窗口
     function adjustHeight() {
         var windowHeight = $(window).height();
@@ -880,6 +1320,13 @@ $(document).ready(function() {
         $('.numberedtextarea-wrapper').css('height', '100%');
         $('.numberedtextarea-wrapper textarea').css('height', '100%');
         $('.numberedtextarea-line-numbers').css('height', '100%');
+        
+        // 调整右侧内容区域高度
+        var rightNavHeight = $('.navi').outerHeight();
+        $('#right-box').css('height', 'calc(100% - ' + rightNavHeight + 'px)');
+        
+        // 确保内容容器有足够的空间
+        $('#json-target').css('min-height', 'calc(100% - 10px)');
     }
     
     // 初始调整和窗口大小变化时调整
@@ -893,7 +1340,7 @@ $(document).ready(function() {
             
             // 检查文件大小，限制在5MB以内
             if (file.size > 5 * 1024 * 1024) {
-                showToast('文件过大，请上传小于5MB的文件', 'error');
+                showToast(getText('errorMessages.fileTooLarge'), 'error');
                 return;
             }
             
@@ -903,13 +1350,14 @@ $(document).ready(function() {
                     var content = event.target.result;
                     $('#json-src').val(content);
                     $('#json-src').keyup(); // 触发解析
-                    showToast('文件"' + file.name + '"已成功加载', 'success');
+                    // 移除上传成功提示
+                    // showToast('文件"' + file.name + '"已成功加载', 'success');
                 } catch (err) {
-                    showToast('无法读取文件', 'error');
+                    showToast(getText('errorMessages.cannotReadFile'), 'error');
                 }
             };
             reader.onerror = function() {
-                showToast('读取文件时发生错误', 'error');
+                showToast(getText('errorMessages.errorReadingFile'), 'error');
             };
             reader.readAsText(file);
         }
@@ -993,6 +1441,26 @@ $(document).ready(function() {
             e.stopPropagation();
         });
     })();
+    
+    // 获取保存的语言设置并初始化
+    // 检查localStorage中是否有语言设置
+    const savedLang = localStorage.getItem('preferredLanguage');
+    if (savedLang && i18n[savedLang]) {
+        currentLang = savedLang;
+        $('#language-select').val(savedLang);
+    } else {
+        // 如果没有保存的设置，尝试检测浏览器语言
+        const browserLang = navigator.language || navigator.userLanguage;
+        const shortLang = browserLang.split('-')[0]; // 获取主要语言代码，如zh-CN变为zh
+        
+        if (i18n[shortLang]) {
+            currentLang = shortLang;
+            $('#language-select').val(shortLang);
+        }
+    }
+    
+    // 初始化UI文本
+    updateUIText();
 });
 
 $('.ai-fix').click(function(){
@@ -1005,8 +1473,6 @@ $('.ai-fix').click(function(){
     // 停止闪烁效果
     $('.ai-fix').removeClass('ai-fix-glow');
     
-    showToast('正在智能修复...', 'info');
-    
     // 尝试智能修复JSON
     var fixedJson = aiFixJson(content);
     
@@ -1014,15 +1480,53 @@ $('.ai-fix').click(function(){
         // 如果修复成功，更新输入区域
         $('#json-src').val(fixedJson);
         // 触发解析
-$('#json-src').keyup();
+        $('#json-src').keyup();
+        // 保留修复成功提示
         showToast('AI修复成功', 'success');
         $(this).attr('style','color:#15b374;');
         setTimeout(function() {
             $('.ai-fix').attr('style','color:#999;');
         }, 1500);
     } else {
-        showToast('无法修复，请检查JSON格式', 'error');
+        showToast(getText('errorMessages.cannotFix'), 'error');
     }
+});
+
+// Python语法测试功能
+$('.py-test').click(function(){
+    // 设置Python样式的测试用例
+    var pythonTestCase = `{
+    "simple": True,
+    "nested": {
+        "value": False,
+        "another": {
+            "deepNested": True
+        }
+    },
+    "string_with_keywords": "This is a True story about False events",
+    "list_with_booleans": [True, False, None, "True in quotes"],
+    "object_with_booleans": {
+        "key1": True,
+        "key2": False,
+        "nested": {
+            "key3": True,
+            "text": "Contains True and False"
+        }
+    },
+    "none_value": None
+}`;
+
+    // 设置到输入框
+    $('#json-src').val(pythonTestCase);
+    
+    // 触发AI修复
+    $('.ai-fix').click();
+    
+    // 高亮测试按钮
+    $(this).attr('style','color:#15b374;');
+    setTimeout(function() {
+        $('.py-test').attr('style','color:#999;');
+    }, 1500);
 });
 
 // AI修复JSON函数
@@ -1035,6 +1539,108 @@ function aiFixJson(content) {
         } catch (e) {
             // 继续下面的修复流程
         }
+        
+        // 创建标记字典来跟踪哪些位置是字符串
+        var inString = false;
+        var stringChar = '';
+        var isEscaped = false;
+        var stringPositions = [];
+        
+        // 遍历字符串，标记所有字符串内部的位置
+        for (var i = 0; i < content.length; i++) {
+            var char = content[i];
+            
+            if (isEscaped) {
+                isEscaped = false;
+                continue;
+            }
+            
+            if (char === '\\') {
+                isEscaped = true;
+                continue;
+            }
+            
+            if (inString) {
+                stringPositions[i] = true;
+                if (char === stringChar) {
+                    inString = false;
+                }
+            } else if (char === '"' || char === "'") {
+                inString = true;
+                stringChar = char;
+                stringPositions[i] = true; // 引号自身也标记为字符串的一部分
+            }
+        }
+        
+        // 0. 预处理 - 处理Python特殊值和语法
+        
+        // 更精确地处理Python的布尔值和None
+        var fixedContent = '';
+        var tokens = content.split(/(\b(?:True|False|None)\b)/g);
+        
+        for (var i = 0; i < tokens.length; i++) {
+            var token = tokens[i];
+            
+            if (token === 'True' || token === 'False' || token === 'None') {
+                // 检查当前token的第一个字符在原始字符串中的位置是否在字符串内
+                var tokenStartPos = content.indexOf(token, fixedContent.length);
+                var isInString = stringPositions[tokenStartPos] === true;
+                
+                if (!isInString) {
+                    // 只有不在字符串内才替换
+                    if (token === 'True') token = 'true';
+                    else if (token === 'False') token = 'false';
+                    else if (token === 'None') token = 'null';
+                }
+            }
+            
+            fixedContent += token;
+        }
+        
+        content = fixedContent;
+        
+        // 转义字符串中的URL特殊字符
+        content = escapeUrlSpecialCharsInJson(content);
+        
+        // 其他处理保持不变
+        content = content
+            // 处理Python的元组和集合 - 替换为数组
+            .replace(/\(([^)]*)\)/g, function(match, p1) {
+                // 仅替换看起来像元组的部分
+                if (/^\s*[\w\d"'\[\]\{\},\s:]+\s*$/.test(p1)) {
+                    return '[' + p1 + ']';
+                }
+                return match;
+            })
+            // 转换集合语法为数组
+            .replace(/\{([^{}]*)\}/g, function(match, p1) {
+                // 仅当内容不包含键值对（:）时才替换，避免替换对象
+                if (p1.indexOf(':') === -1) {
+                    return '[' + p1 + ']';
+                }
+                return match;
+            })
+            // 移除Python注释
+            .replace(/#.*$/gm, '')
+            // 处理多行字符串
+            .replace(/'''([\s\S]*?)'''/g, function(match, p1) {
+                return JSON.stringify(p1);
+            })
+            .replace(/"""([\s\S]*?)"""/g, function(match, p1) {
+                return JSON.stringify(p1);
+            })
+            // 处理字符串中的单引号
+            .replace(/'([^']*)'/g, function(match, p1) {
+                // 如果已经在双引号内，不进行替换
+                if (isInDoubleQuotes(content, match.index)) {
+                    return match;
+                }
+                return '"' + p1.replace(/"/g, '\\"') + '"';
+            })
+            // 处理Python的数学表示法（1e6这类）
+            .replace(/\b(\d+)e([+-]?\d+)\b/g, function(match, p1, p2) {
+                return p1 + 'e' + p2;
+            });
         
         // 1. 尝试处理前后有日志信息的情况
         var jsonPattern = /(\{[\s\S]*\}|\[[\s\S]*\])/;
@@ -1184,6 +1790,17 @@ function aiFixJson(content) {
     }
 }
 
+// 辅助函数：检查字符串某位置是否在双引号内
+function isInDoubleQuotes(str, pos) {
+    var quoteCount = 0;
+    for (var i = 0; i < pos; i++) {
+        if (str[i] === '"' && (i === 0 || str[i-1] !== '\\')) {
+            quoteCount++;
+        }
+    }
+    return quoteCount % 2 === 1; // 奇数表示在引号内
+}
+
 // 修复未闭合的引号
 function fixUnclosedQuotes(content) {
     // 这里实现一个简单的引号修复逻辑
@@ -1220,6 +1837,99 @@ function fixUnclosedQuotes(content) {
     
     return lines.join('\n');
 }
+
+// 转义JSON字符串中的URL特殊字符
+function escapeUrlSpecialCharsInJson(content) {
+    // 创建一个处理字符串的函数，只处理字符串内部的特殊字符
+    var inString = false;
+    var stringChar = '';
+    var isEscaped = false;
+    var result = '';
+    
+    for (var i = 0; i < content.length; i++) {
+        var char = content[i];
+        
+        if (isEscaped) {
+            // 已经是转义字符，直接添加
+            result += char;
+            isEscaped = false;
+            continue;
+        }
+        
+        if (char === '\\') {
+            // 转义符号，标记并添加
+            result += char;
+            isEscaped = true;
+            continue;
+        }
+        
+        if (inString) {
+            // 在字符串内部
+            if (char === stringChar) {
+                // 遇到闭合引号，结束字符串
+                inString = false;
+                result += char;
+            } else if (char === '#' && !isEscaped) {
+                // URL中的#号需要转义为\u0023
+                result += '\\u0023';
+            } else if (char === '&' && !isEscaped) {
+                // URL中的&号需要转义为\u0026
+                result += '\\u0026';
+            } else if (char === '?' && !isEscaped) {
+                // URL中的?号需要转义为\u003F
+                result += '\\u003F';
+            } else if (char === '=' && !isEscaped) {
+                // URL中的=号需要转义为\u003D
+                result += '\\u003D';
+            } else if (char === '+' && !isEscaped) {
+                // URL中的+号需要转义为\u002B
+                result += '\\u002B';
+            } else if (char === '%' && !isEscaped) {
+                // URL中的%号需要转义为\u0025
+                result += '\\u0025';
+            } else if (char === '@' && !isEscaped) {
+                // @符号转义为\u0040
+                result += '\\u0040';
+            } else if (char === ':' && !isEscaped) {
+                // :符号转义为\u003A
+                result += '\\u003A';
+            } else if (char === '/' && !isEscaped) {
+                // /符号转义为\u002F
+                result += '\\u002F';
+            } else {
+                result += char;
+            }
+        } else if (char === '"' || char === "'") {
+            // 进入字符串模式
+            inString = true;
+            stringChar = char;
+            result += char;
+        } else {
+            result += char;
+        }
+    }
+    
+    return result;
+}
+
+// 确保格式化后的JSON底部有足够的空间
+function ensureBottomSpaceForJson() {
+    // 检查是否存在底部边距
+    if ($('#bottom-spacer').length === 0) {
+        $('#json-target').append('<div id="bottom-spacer" style="height:40px;"></div>');
+    }
+    
+    // 如果内容很长，确保滚动到可见区域
+    if ($('#json-target').height() > $('#right-box').height()) {
+        // 这里不强制滚动，让用户自己控制滚动位置
+    }
+}
+
+// 每次格式化JSON后调用
+$('#json-src').keyup(function(){
+    // ... existing code ...
+    ensureBottomSpaceForJson();
+});
 </script>
 </body>
 </html>
