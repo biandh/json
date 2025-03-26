@@ -571,7 +571,7 @@ const i18n = {
             'copyFailed': '复制失败，请手动复制',
             'noContentToSave': '没有可保存的内容',
             'noContentToUndo': '没有可撤回的内容',
-            'fileTooLarge': '文件过大，请上传小于5MB的文件',
+            'fileTooLarge': '文件过大，请上传小于20MB的文件',
             'cannotReadFile': '无法读取文件',
             'errorReadingFile': '读取文件时发生错误',
             'noContentToFix': '没有可修复的内容',
@@ -608,7 +608,7 @@ const i18n = {
             'copyFailed': 'Copy failed, please copy manually',
             'noContentToSave': 'No content to save',
             'noContentToUndo': 'No content to undo',
-            'fileTooLarge': 'File too large, please upload a file smaller than 5MB',
+            'fileTooLarge': 'File too large, please upload a file smaller than 20MB',
             'cannotReadFile': 'Cannot read file',
             'errorReadingFile': 'Error reading file',
             'noContentToFix': 'No content to fix',
@@ -645,7 +645,7 @@ const i18n = {
             'copyFailed': 'コピーに失敗しました、手動でコピーしてください',
             'noContentToSave': '保存するコンテンツがありません',
             'noContentToUndo': '元に戻すコンテンツがありません',
-            'fileTooLarge': 'ファイルが大きすぎます、5MB未満のファイルをアップロードしてください',
+            'fileTooLarge': 'ファイルが大きすぎます、20MB未満のファイルをアップロードしてください',
             'cannotReadFile': 'ファイルを読み込めません',
             'errorReadingFile': 'ファイル読み込み中にエラーが発生しました',
             'noContentToFix': '修正するコンテンツがありません',
@@ -682,7 +682,7 @@ const i18n = {
             'copyFailed': '복사 실패, 수동으로 복사하세요',
             'noContentToSave': '저장할 내용이 없습니다',
             'noContentToUndo': '되돌릴 내용이 없습니다',
-            'fileTooLarge': '파일이 너무 큽니다. 5MB 미만의 파일을 업로드하세요',
+            'fileTooLarge': '파일이 너무 큽니다. 20MB 미만의 파일을 업로드하세요',
             'cannotReadFile': '파일을 읽을 수 없습니다',
             'errorReadingFile': '파일 읽기 오류',
             'noContentToFix': '수정할 내용이 없습니다',
@@ -1456,9 +1456,9 @@ $('#json-src').keyup();
         if (e.target.files.length > 0) {
             var file = e.target.files[0];
             
-            // 检查文件大小，限制在5MB以内
-            if (file.size > 5 * 1024 * 1024) {
-                showToast(getText('errorMessages.fileTooLarge'), 'error');
+            // 检查文件大小，限制在20MB以内
+            if (file.size > 20 * 1024 * 1024) {
+                showToast('文件过大，请上传小于20MB的文件', 'error');
                 return;
             }
             
@@ -1468,14 +1468,12 @@ $('#json-src').keyup();
                     var content = event.target.result;
                     $('#json-src').val(content);
                     $('#json-src').keyup(); // 触发解析
-                    // 移除上传成功提示
-                    // showToast('文件"' + file.name + '"已成功加载', 'success');
                 } catch (err) {
-                    showToast(getText('errorMessages.cannotReadFile'), 'error');
+                    showToast('无法读取文件', 'error');
                 }
             };
             reader.onerror = function() {
-                showToast(getText('errorMessages.errorReadingFile'), 'error');
+                showToast('读取文件时发生错误', 'error');
             };
             reader.readAsText(file);
         }
