@@ -176,6 +176,16 @@
             animation: glow-animation 1s infinite;
         }
         
+        /* 设置AI修复图标的默认颜色 */
+        .ai-fix {
+            color: #15b374 !important;
+        }
+        
+        /* 当有错误时,图标变为橙色 */
+        .ai-fix.has-error {
+            color: #f1592a !important;
+        }
+        
         /* 自适应高度设置 */
         html, body {
             height: 100%;
@@ -422,7 +432,17 @@
             <i class="fa fa-upload"></i> 上传
         </label>
         <input type="file" id="file-upload" accept=".json,.txt">
-        <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..."   class="form-control"  style="height:722px;padding:0 10px 10px 20px;border:0;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none; outline:none;">{&#13"网站名称": "hijson.com",&#13"功能介绍": "最好用的JSON在线解析工具",&#13"特色功能": {&#13  "JSON解析": "支持格式化高亮折叠",&#13  "支持XML转换": "支持XML转换JSON,JSON转XML",&#13  "格式验证": "详细准确的错误提示",&#13  "宽松解析": "支持注释和尾部逗号"&#13},&#13"记住我们": "hijson.com - 简单易用的JSON工具"&#13}</textarea>
+        <div class="form-group" style="height: 100%; margin: 0;">
+            <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..." class="form-control" style="height: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; resize: none; font-family: monospace; font-size: 14px; line-height: 1.4;">{
+    "slogan": "智能的json在线解析工具",
+    "features": [
+        "支持AI智能修复",
+        "支持Python字典格式",
+        "支持大文件处理"
+    ],
+    "version": "1.0.0"
+}</textarea>
+        </div>
         <!-- 重新创建分割线元素，移除可能的事件和样式 -->
         <div id="divider" class="resizer"></div>
     </div>
@@ -436,7 +456,7 @@
             <a href="index.html#" class="tip save-local" title="保存到本地"  data-placement="bottom"><i class="fa fa-download"></i></a>
             <a href="index.html#" class="tip xml" title="转XML"  data-placement="bottom"><i class="fa fa-file-code-o"></i></a>
             <a href="index.html#" class="tip py-test" title="测试Python语法"  data-placement="bottom"><i class="fa fa-flask"></i></a>
-            <a href="index.html#" class="tip ai-fix" title="AI智能修复"  data-placement="bottom"><i class="fa fa-magic"></i></a>
+            <a href="index.html#" class="tip ai-fix" title="AI智能修复"  data-placement="bottom" style="color: #f1592a;"><i class="fa fa-magic"></i></a>
         </div>
         <div id="right-box"  style="height:679px;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none;overflow-y:scroll; outline:none;position:relative;">
             <div id="line-num" style="background-color:#fafafa;padding:0px 8px;float:left;border-right:dashed 1px #eee;display:none;z-index:-1;color:#999;position:absolute;text-align:center;over-flow:hidden;">
@@ -893,9 +913,9 @@ $('#json-src').keyup(function(){
             var errorMsg = e.message || e.toString();
             var originalContent = e.original || content;
             
-            // 在解析错误时让AI修复按钮闪烁发光
-            $('.ai-fix').addClass('ai-fix-glow');
-            // 6秒后停止闪烁
+            // 在解析错误时让AI修复按钮闪烁发光并添加错误类
+            $('.ai-fix').addClass('ai-fix-glow has-error');
+            // 6秒后停止闪烁,但保持错误状态
             setTimeout(function() {
                 $('.ai-fix').removeClass('ai-fix-glow');
             }, 6000);
@@ -1584,6 +1604,8 @@ $('.ai-fix').click(function(){
         // 保留修复成功提示
         showToast('AI修复成功', 'success');
         $(this).attr('style','color:#15b374;');
+        // 移除错误类
+        $('.ai-fix').removeClass('has-error');
         setTimeout(function() {
             $('.ai-fix').attr('style','color:#999;');
         }, 1500);
