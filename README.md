@@ -117,10 +117,20 @@
      sudo cp -r * /var/www/json-parser/
      ```
 
-   - 设置目录权限：
+   - 设置目录权限（根据系统选择对应的命令）：
+
+     Ubuntu/Debian:
      ```bash
      sudo chown -R www-data:www-data /var/www/json-parser
-     sudo chmod -R 755 /var/www/json-parser
+     sudo chmod -R 644 /var/www/json-parser/*  # 文件权限
+     sudo find /var/www/json-parser -type d -exec chmod 755 {} \;  # 目录权限
+     ```
+
+     CentOS/RHEL:
+     ```bash
+     sudo chown -R nginx:nginx /var/www/json-parser
+     sudo chmod -R 644 /var/www/json-parser/*  # 文件权限
+     sudo find /var/www/json-parser -type d -exec chmod 755 {} \;  # 目录权限
      ```
 
 3. **配置 Nginx**
@@ -158,17 +168,98 @@
 - 如果使用域名：直接访问 `http://your-domain.com`
 - 如果使用 IP：访问 `http://your-server-ip`
 
+## 服务更新说明
+
+### 手动更新
+
+1. **备份当前文件**
+   ```bash
+   sudo cp -r /var/www/json-parser /var/www/json-parser.bak
+   ```
+
+2. **更新文件**
+   ```bash
+   # 进入项目目录
+   cd /path/to/your/project
+   
+   # 拉取最新代码
+   git pull
+   
+   # 复制到网站目录
+   sudo cp -r * /var/www/json-parser/
+   
+   # 设置正确的权限
+   sudo chown -R nginx:nginx /var/www/json-parser/
+   sudo chmod -R 644 /var/www/json-parser/*
+   sudo find /var/www/json-parser/ -type d -exec chmod 755 {} \;
+   
+   # 重新加载 Nginx 配置
+   sudo systemctl reload nginx
+   ```
+
+3. **检查更新**
+   - 访问网站检查功能是否正常
+   - 检查浏览器控制台是否有错误
+   - 检查 Nginx 错误日志：`sudo tail -f /var/log/nginx/error.log`
+
+### 自动更新
+
+1. **创建更新脚本**
+   ```bash
+   # 创建脚本文件
+   sudo nano /usr/local/bin/update-json-parser.sh
+   
+   # 添加以下内容
+   #!/bin/bash
+   cd /path/to/your/project
+   git pull
+   sudo cp -r * /var/www/json-parser/
+   sudo chown -R nginx:nginx /var/www/json-parser/
+   sudo chmod -R 644 /var/www/json-parser/*
+   sudo find /var/www/json-parser/ -type d -exec chmod 755 {} \;
+   sudo systemctl reload nginx
+   echo "更新完成: $(date)" >> /var/log/json-parser-update.log
+   ```
+
+2. **设置脚本权限**
+   ```bash
+   sudo chmod +x /usr/local/bin/update-json-parser.sh
+   ```
+
+3. **设置定时任务**
+   ```bash
+   # 编辑 crontab
+   sudo crontab -e
+   
+   # 添加以下行（每小时检查更新）
+   0 * * * * /usr/local/bin/update-json-parser.sh
+   ```
+
+### 回滚更新
+
+如果更新后发现问题，可以快速回滚：
+```bash
+# 恢复备份
+sudo rm -rf /var/www/json-parser
+sudo cp -r /var/www/json-parser.bak /var/www/json-parser
+sudo systemctl reload nginx
+```
+
 ## 注意事项
 
 1. 确保服务器防火墙允许 80 端口访问
 2. 如果使用域名，需要正确配置 DNS 解析
 3. 建议配置 HTTPS 以提供更安全的访问
+4. 确保文件权限设置正确，避免安全风险
+5. 更新前务必备份文件
+6. 定期检查更新日志
 
 ## 维护说明
 
 - 日志文件位置：`/var/log/nginx/`
 - 配置文件位置：`/etc/nginx/conf.d/json-parser.conf`
 - 网站文件位置：`/var/www/json-parser/`
+- 更新日志位置：`/var/log/json-parser-update.log`
 
 ## 技术支持
 
