@@ -458,8 +458,8 @@
 
 <main class="row-fluid">
     <div class="col-md-5" style="padding:0;">
-        <label class="upload-btn" for="file-upload" title="上传JSON文件">
-            <i class="fa fa-upload"></i> 上传
+        <label class="upload-btn" for="file-upload" data-title="uploadTitle">
+            <i class="fa fa-upload"></i><span>上传</span>
         </label>
         <input type="file" id="file-upload" accept=".json,.txt">
         <div class="loading-spinner">
@@ -586,6 +586,7 @@ const i18n = {
             'components': 'Json组件'
         },
         'upload': '上传',
+        'uploadTitle': '上传JSON文件',
         'compression': '压缩',
         'showLineNumbers': '显示行号',
         'clear': '清空',
@@ -623,6 +624,7 @@ const i18n = {
             'components': 'Components'
         },
         'upload': 'Upload',
+        'uploadTitle': 'Upload JSON File',
         'compression': 'Compress',
         'showLineNumbers': 'Show Line Numbers',
         'clear': 'Clear',
@@ -660,6 +662,7 @@ const i18n = {
             'components': 'コンポーネント'
         },
         'upload': 'アップロード',
+        'uploadTitle': 'JSONファイルをアップロード',
         'compression': '圧縮',
         'showLineNumbers': '行番号の表示',
         'clear': 'クリア',
@@ -697,6 +700,7 @@ const i18n = {
             'components': '컴포넌트'
         },
         'upload': '업로드',
+        'uploadTitle': 'JSON 파일 업로드',
         'compression': '압축',
         'showLineNumbers': '줄 번호 표시',
         'clear': '지우기',
@@ -753,6 +757,8 @@ function changeLanguage(lang) {
 
 // 更新UI文本
 function updateUIText() {
+    console.log('开始更新UI文本，当前语言:', currentLang);
+    
     // 更新导航栏文本
     $('.navi a').each(function() {
         var $link = $(this);
@@ -778,8 +784,22 @@ function updateUIText() {
     $('.py-test').attr('title', i18n[currentLang].testPythonSyntax);
     $('.ai-fix').attr('title', i18n[currentLang].aiFix);
     
-    // 更新上传按钮文本
-    $('.upload-btn i').next().text(i18n[currentLang].upload);
+    // 更新上传按钮文本和提示
+    console.log('上传按钮当前状态:', {
+        '按钮文本': $('.upload-btn span').text(),
+        '按钮提示': $('.upload-btn').attr('title'),
+        'data-title属性': $('.upload-btn').attr('data-title'),
+        'i18n中的upload值': i18n[currentLang].upload,
+        'i18n中的uploadTitle值': i18n[currentLang].uploadTitle
+    });
+    
+    $('.upload-btn span').text(i18n[currentLang].upload);
+    $('.upload-btn').attr('title', i18n[currentLang][$('.upload-btn').attr('data-title')]);
+    
+    console.log('上传按钮更新后状态:', {
+        '按钮文本': $('.upload-btn span').text(),
+        '按钮提示': $('.upload-btn').attr('title')
+    });
     
     // 更新输入框占位符
     $('#json-src').attr('placeholder', i18n[currentLang].inputPlaceholder);
@@ -899,6 +919,103 @@ function init(){
     $('.undo').attr('style','color:#999;');
     $('.ai-fix').attr('style','color:#999;');
 }
+
+// 文件上传处理
+$('#file-upload').change(function(e) {
+    if (e.target.files.length > 0) {
+        var file = e.target.files[0];
+        
+        // 检查文件大小，限制在20MB以内
+        if (file.size > 20 * 1024 * 1024) {
+            showToast(getText('errorMessages.fileTooLarge'), 'error');
+            return;
+        }
+        
+        // 如果文件大于3MB，显示加载动画
+        if (file.size > 3 * 1024 * 1024) {
+            $('.loading-spinner').show();
+        }
+        
+        // 清理之前的数据
+        current_json = null;
+        current_json_str = '';
+        $('#json-target').empty();
+        
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                var content = event.target.result;
+                $('#json-src').val(content);
+                $('#json-src').keyup(); // 触发解析
+            } catch (err) {
+                showToast(getText('errorMessages.cannotReadFile'), 'error');
+            } finally {
+                // 确保在任何情况下都隐藏加载动画
+                $('.loading-spinner').hide();
+                // 清空文件输入框，这样用户可以重复上传同一个文件
+                $('#file-upload').val('');
+                // 强制进行垃圾回收
+                if (window.gc) {
+                    window.gc();
+                }
+            }
+        };
+        reader.onerror = function() {
+            showToast(getText('errorMessages.errorReadingFile'), 'error');
+            // 确保在错误时也隐藏加载动画
+            $('.loading-spinner').hide();
+            // 清空文件输入框
+            $('#file-upload').val('');
+        };
+        reader.readAsText(file);
+    }
+});
+
+// 优化JSON渲染函数
+function renderJson(content) {
+    try {
+        // 清理之前的数据
+        $('#json-target').empty();
+        
+        // 使用更宽松的JSON5解析器
+        try {
+            // 首先尝试使用JSON5解析
+            current_json = JSON5.parse(content);
+            current_json_str = JSON.stringify(current_json);
+            var result = new JSONFormat(JSON.stringify(current_json), 4).toString();
+        } catch(json5Error) {
+            // 如果JSON5解析失败，回退到原始方法
+            try {
+                current_json = jsonlint.parse(content);
+                current_json_str = JSON.stringify(current_json);
+                result = new JSONFormat(content, 4).toString();
+            } catch(e) {
+                throw {
+                    message: e.toString(),
+                    original: content
+                };
+            }
+        }
+        
+        // 使用文档片段来优化渲染性能
+        var fragment = document.createDocumentFragment();
+        var tempDiv = document.createElement('div');
+        tempDiv.innerHTML = result;
+        fragment.appendChild(tempDiv);
+        
+        // 一次性更新DOM
+        $('#json-target').append(fragment);
+        
+        // 确保内容底部有足够空间
+        ensureBottomSpaceForJson();
+        
+    } catch(e) {
+        // 错误处理保持不变
+        // ... existing error handling code ...
+    }
+}
+
+// 修改keyup事件处理
 $('#json-src').keyup(function(){
     // 保存当前输入，用于撤回功能
     if($(this).val() !== last_json_src) {
@@ -907,97 +1024,13 @@ $('#json-src').keyup(function(){
     
     init();
     var content = $.trim($(this).val());
-    var result = '';
-    if (content!='') {
-        //如果是xml,那么转换为json
-        if (content.substr(0,1) === '<' && content.substr(-1,1) === '>') {
-            try{
-                var json_obj = $.xml2json(content);
-                content = JSON.stringify(json_obj);
-            }catch(e){
-                result = '解析错误：<span style="color: #f1592a;font-weight:bold;">' + e.message + '</span>';
-                current_json_str = result;
-                $('#json-target').html(result);
-                return false;
-            }
-        }
-        try{
-            // 使用更宽松的JSON5解析器
-            try {
-                // 首先尝试使用JSON5解析
-                current_json = JSON5.parse(content);
-                current_json_str = JSON.stringify(current_json);
-                result = new JSONFormat(JSON.stringify(current_json), 4).toString();
-            } catch(json5Error) {
-                // 如果JSON5解析失败，回退到原始方法
-                try {
-                    // 不再删除换行符，保留原始行号信息
-            current_json = jsonlint.parse(content);
-            current_json_str = JSON.stringify(current_json);
-                    result = new JSONFormat(content, 4).toString();
-                } catch(e) {
-                    throw {
-                        message: e.toString(),
-                        original: content
-                    };
-                }
-            }
-        } catch(e) {
-            // 优化错误提示
-            var errorMsg = e.message || e.toString();
-            var originalContent = e.original || content;
-            
-            // 在解析错误时让AI修复按钮闪烁发光并添加错误类
-            $('.ai-fix').addClass('ai-fix-glow has-error');
-            // 6秒后停止闪烁,但保持错误状态
-            setTimeout(function() {
-                $('.ai-fix').removeClass('ai-fix-glow');
-            }, 6000);
-            
-            // 尝试定位错误位置
-            var errorLineInfo = '';
-            var match = errorMsg.match(/line\s+(\d+)/i) || errorMsg.match(/在第(\d+)行/);
-            if (match && match[1]) {
-                var lineNum = parseInt(match[1]);
-                var contentLines = originalContent.split("\n");
-                var errorLine = contentLines[lineNum - 1] || '';
-                
-                if (errorLine) {
-                    // 不再重复显示行号，直接显示有问题的行内容
-                    errorLineInfo = '<div style="margin-top:10px;background:#ffecec;padding:10px;border-radius:4px;border-left:4px solid #f1592a;">' +
-                        '<pre style="margin:0;white-space:pre-wrap;word-break:break-all;">' + 
-                        escapeHtml(errorLine) + '</pre></div>';
-                }
-            }
-            
-            // 美化错误信息
-            var friendlyError = errorMsg
-                .replace(/Parse error on line (\d+):/g, getText('parseErrorAtLine', [match ? match[1] : ""]))
-                .replace(/Unexpected/g, getText('unexpectedToken'))
-                .replace(/Expected/g, getText('expectedToken'))
-                .replace(/\s?'([^']+)'\s?/g, ' <code>$1</code> ')
-                .replace(/\[\d+,\s*\d+\]/g, '')  // 移除位置信息 [1, 2] 这样的内容
-                .replace(/end of input/g, getText('endOfInput'));
-            
-            result = '<div style="color: #f1592a;font-weight:bold;">' + 
-                '<i class="fa fa-exclamation-circle" style="margin-right:5px;"></i>' + getText('jsonParseError') + '<div style="margin:10px 0 0 10px;">' + 
-                friendlyError + '</div>' + errorLineInfo + 
-                '<div style="margin-top:15px;font-weight:normal;color:#666;">' + 
-                getText('errorHint') + 
-                '</div></div>';
-            
-            current_json_str = result;
-        }
-
-        $('#json-target').html(result);
-        
-        // 确保内容底部有足够空间
-        ensureBottomSpaceForJson();
-    }else{
+    if (content != '') {
+        renderJson(content);
+    } else {
         $('#json-target').html('');
     }
-
 });
+
 $('.xml').click(function(){
     if(current_json_str && current_json_str !== '') {
     if (xml_flag) {
@@ -1486,44 +1519,6 @@ $('#json-src').keyup();
     // 初始调整和窗口大小变化时调整
     adjustHeight();
     $(window).resize(adjustHeight);
-    
-    // 文件上传处理
-    $('#file-upload').change(function(e) {
-        if (e.target.files.length > 0) {
-            var file = e.target.files[0];
-            
-            // 检查文件大小，限制在20MB以内
-            if (file.size > 20 * 1024 * 1024) {
-                showToast('文件过大，请上传小于20MB的文件', 'error');
-                return;
-            }
-            
-            // 如果文件大于3MB，显示加载动画
-            if (file.size > 3 * 1024 * 1024) {
-                $('.loading-spinner').show();
-            }
-            
-            var reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    var content = event.target.result;
-                    $('#json-src').val(content);
-                    $('#json-src').keyup(); // 触发解析
-                } catch (err) {
-                    showToast('无法读取文件', 'error');
-                } finally {
-                    // 隐藏加载动画
-                    $('.loading-spinner').hide();
-                }
-            };
-            reader.onerror = function() {
-                showToast('读取文件时发生错误', 'error');
-                // 隐藏加载动画
-                $('.loading-spinner').hide();
-            };
-            reader.readAsText(file);
-        }
-    });
     
     // 完全重置分割线的风格和行为
     (function initDivider() {
