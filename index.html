@@ -986,8 +986,8 @@ function renderJson(content) {
         } catch(json5Error) {
             // 如果JSON5解析失败，回退到原始方法
             try {
-                current_json = jsonlint.parse(content);
-                current_json_str = JSON.stringify(current_json);
+            current_json = jsonlint.parse(content);
+            current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
             } catch(e) {
                 throw {
@@ -1010,8 +1010,21 @@ function renderJson(content) {
         ensureBottomSpaceForJson();
         
     } catch(e) {
-        // 错误处理保持不变
-        // ... existing error handling code ...
+        // 显示错误信息
+        var errorMessage = '<div class="error-message" style="color: #f1592a; padding: 10px; background: #fff5f5; border: 1px solid #f1592a; border-radius: 4px; margin: 10px;">';
+        errorMessage += '<strong>' + getText('jsonParseError') + '</strong><br/>';
+        errorMessage += e.message + '<br/>';
+        errorMessage += getText('errorHint');
+        errorMessage += '</div>';
+        
+        $('#json-target').html(errorMessage);
+        
+        // 清空当前JSON数据
+        current_json = null;
+        current_json_str = '';
+        
+        // 显示错误提示
+        showToast(getText('errorMessages.cannotFix'), 'error');
     }
 }
 
@@ -1691,257 +1704,83 @@ $('.py-test').click(function(){
 // AI修复JSON函数
 function aiFixJson(content) {
     try {
-        // 先尝试标准解析，如果成功就不需要修复
-        try {
-            JSON5.parse(content);
-            return content; // 已经是有效的JSON5
-        } catch (e) {
-            // 继续下面的修复流程
+        // 1. 首先进行基本的括号修复
+        let fixedContent = content.trim();
+        
+        // 检查第一个非空字符
+        let firstChar = fixedContent.charAt(0);
+        let lastChar = fixedContent.charAt(fixedContent.length - 1);
+        
+        // 如果缺少开头的大括号但有结尾的大括号
+        if (firstChar !== '{' && lastChar === '}') {
+            fixedContent = '{' + fixedContent;
+        }
+        // 如果缺少结尾的大括号但有开头的大括号
+        else if (firstChar === '{' && lastChar !== '}') {
+            fixedContent = fixedContent + '}';
+        }
+        // 如果缺少开头的中括号但有结尾的中括号
+        else if (firstChar !== '[' && lastChar === ']') {
+            fixedContent = '[' + fixedContent;
+        }
+        // 如果缺少结尾的中括号但有开头的中括号
+        else if (firstChar === '[' && lastChar !== ']') {
+            fixedContent = fixedContent + ']';
         }
         
-        // 创建标记字典来跟踪哪些位置是字符串
-        var inString = false;
-        var stringChar = '';
-        var isEscaped = false;
-        var stringPositions = [];
-        
-        // 遍历字符串，标记所有字符串内部的位置
-        for (var i = 0; i < content.length; i++) {
-            var char = content[i];
-            
-            if (isEscaped) {
-                isEscaped = false;
-                continue;
-            }
-            
-            if (char === '\\') {
-                isEscaped = true;
-                continue;
-            }
-            
-            if (inString) {
-                stringPositions[i] = true;
-                if (char === stringChar) {
-                    inString = false;
-                }
-            } else if (char === '"' || char === "'") {
-                inString = true;
-                stringChar = char;
-                stringPositions[i] = true; // 引号自身也标记为字符串的一部分
-            }
-        }
-        
-        // 0. 预处理 - 处理Python特殊值和语法
-        
-        // 更精确地处理Python的布尔值和None
-        var fixedContent = '';
-        var tokens = content.split(/(\b(?:True|False|None)\b)/g);
-        
-        for (var i = 0; i < tokens.length; i++) {
-            var token = tokens[i];
-            
-            if (token === 'True' || token === 'False' || token === 'None') {
-                // 检查当前token的第一个字符在原始字符串中的位置是否在字符串内
-                var tokenStartPos = content.indexOf(token, fixedContent.length);
-                var isInString = stringPositions[tokenStartPos] === true;
-                
-                if (!isInString) {
-                    // 只有不在字符串内才替换
-                    if (token === 'True') token = 'true';
-                    else if (token === 'False') token = 'false';
-                    else if (token === 'None') token = 'null';
-                }
-            }
-            
-            fixedContent += token;
-        }
-        
-        content = fixedContent;
-        
-        // 转义字符串中的URL特殊字符
-        content = escapeUrlSpecialCharsInJson(content);
-        
-        // 其他处理保持不变
-        content = content
-            // 处理Python的元组和集合 - 替换为数组
-            .replace(/\(([^)]*)\)/g, function(match, p1) {
-                // 仅替换看起来像元组的部分
-                if (/^\s*[\w\d"'\[\]\{\},\s:]+\s*$/.test(p1)) {
-                    return '[' + p1 + ']';
-                }
-                return match;
-            })
-            // 转换集合语法为数组
-            .replace(/\{([^{}]*)\}/g, function(match, p1) {
-                // 仅当内容不包含键值对（:）时才替换，避免替换对象
-                if (p1.indexOf(':') === -1) {
-                    return '[' + p1 + ']';
-                }
-                return match;
-            })
-            // 移除Python注释
-            .replace(/#.*$/gm, '')
-            // 处理多行字符串
-            .replace(/'''([\s\S]*?)'''/g, function(match, p1) {
-                return JSON.stringify(p1);
-            })
-            .replace(/"""([\s\S]*?)"""/g, function(match, p1) {
-                return JSON.stringify(p1);
-            })
-            // 处理字符串中的单引号
-            .replace(/'([^']*)'/g, function(match, p1) {
-                // 如果已经在双引号内，不进行替换
-                if (isInDoubleQuotes(content, match.index)) {
-                    return match;
-                }
-                return '"' + p1.replace(/"/g, '\\"') + '"';
-            })
-            // 处理Python的数学表示法（1e6这类）
-            .replace(/\b(\d+)e([+-]?\d+)\b/g, function(match, p1, p2) {
-                return p1 + 'e' + p2;
-            });
-        
-        // 1. 尝试处理前后有日志信息的情况
-        var jsonPattern = /(\{[\s\S]*\}|\[[\s\S]*\])/;
-        var matches = content.match(jsonPattern);
-        
-        if (matches && matches[1]) {
-            var extractedJson = matches[1];
-            try {
-                JSON5.parse(extractedJson);
-                return extractedJson; // 提取的内容是有效JSON
-            } catch (e) {
-                // 提取的内容还不是有效JSON，继续修复
-            }
-        }
-        
-        // 2. 检查并修复缺失的大括号和中括号
-        var openCurly = (content.match(/\{/g) || []).length;
-        var closeCurly = (content.match(/\}/g) || []).length;
-        var openSquare = (content.match(/\[/g) || []).length;
-        var closeSquare = (content.match(/\]/g) || []).length;
-        
-        // 检查是否缺少开头的大括号或中括号
-        var firstChar = content.trim().charAt(0);
-        var lastChar = content.trim().charAt(content.trim().length - 1);
-        var needOpeningCurly = false;
-        var needOpeningSquare = false;
-        
-        // 如果内容的第一个非空字符不是{或[，但是存在}或]，则可能需要添加开头括号
-        if (firstChar !== '{' && firstChar !== '[') {
-            // 如果有闭合括号，判断需要哪种开头括号
-            if (closeCurly > openCurly) {
-                needOpeningCurly = true;
-            } else if (closeSquare > openSquare) {
-                needOpeningSquare = true;
-            }
-            // 如果没有明显的括号不平衡，但内容像是一个对象
-            else if (content.includes(':') && !content.trim().startsWith('"') && !content.trim().startsWith("'")) {
-                needOpeningCurly = true;
-            }
-            // 如果看起来像是一个数组
-            else if (content.includes(',') && !content.includes(':')) {
-                needOpeningSquare = true;
-            }
-        }
-        
-        // 添加缺失的开头括号
-        if (needOpeningCurly) {
-            content = '{' + content;
-            openCurly++; // 更新括号计数
-        } else if (needOpeningSquare) {
-            content = '[' + content;
-            openSquare++; // 更新括号计数
-        }
-        
-        // 如果内容不以{或[开头，但包含它们，尝试找到第一个有效位置
-        if (!/^[\s]*[\{\[]/.test(content) && (openCurly > 0 || openSquare > 0)) {
-            var firstCurly = content.indexOf('{');
-            var firstSquare = content.indexOf('[');
-            
-            if (firstCurly >= 0 && (firstSquare < 0 || firstCurly < firstSquare)) {
-                content = content.substring(firstCurly);
-            } else if (firstSquare >= 0) {
-                content = content.substring(firstSquare);
-            }
-        }
-        
-        // 补全缺失的闭合大括号
-        if (openCurly > closeCurly) {
-            for (var i = 0; i < openCurly - closeCurly; i++) {
-                content += '}';
-            }
-        }
-        // 补全缺失的开头大括号（如果结尾有多余）
-        else if (closeCurly > openCurly) {
-            content = '{' + content;
-            // 如果添加了开头括号但仍然不平衡，继续添加
-            for (var i = 1; i < closeCurly - openCurly; i++) {
-                content = '{' + content;
-            }
-        }
-        
-        // 补全缺失的闭合中括号
-        if (openSquare > closeSquare) {
-            for (var i = 0; i < openSquare - closeSquare; i++) {
-                content += ']';
-            }
-        }
-        // 补全缺失的开头中括号（如果结尾有多余）
-        else if (closeSquare > openSquare) {
-            content = '[' + content;
-            // 如果添加了开头括号但仍然不平衡，继续添加
-            for (var i = 1; i < closeSquare - openSquare; i++) {
-                content = '[' + content;
-            }
-        }
-        
-        // 3. 尝试处理常见语法错误
-        // 移除行尾多余的逗号（JSON5已经支持，这里作为额外保障）
-        content = content.replace(/,(\s*[\}\]])/g, '$1');
-        
-        // 修复未闭合的引号
-        var fixedContent = fixUnclosedQuotes(content);
-        
-        // 最终验证
+        // 尝试解析修复后的内容
         try {
             JSON5.parse(fixedContent);
             return fixedContent;
         } catch (e) {
-            // 如果还是失败，最后尝试一种更激进的方式
-            try {
-                // 检查是否像是一个对象但没有括号
-                if (!fixedContent.trim().startsWith('{') && !fixedContent.trim().startsWith('[') &&
-                    fixedContent.includes(':')) {
-                    fixedContent = '{' + fixedContent + '}';
-                    // 再次尝试解析
-                    try {
-                        JSON5.parse(fixedContent);
-                        return fixedContent;
-                    } catch (err) {
-                        // 继续下面的尝试
-                    }
-                }
-                
-                // 尝试通过eval方式转换（仅用于修复，有潜在安全风险）
-                // 因为某些情况下，字符串中包含特殊字符或不规范的内容可能导致解析失败
-                var obj = eval('(' + fixedContent + ')');
-                return JSON.stringify(obj, null, 2);
-            } catch (evalError) {
-                // 如果所有方法都失败，最后一次尝试：
-                // 直接加上大括号包装整个内容
-                try {
-                    if (!fixedContent.trim().startsWith('{') && !fixedContent.trim().startsWith('[')) {
-                        fixedContent = '{' + fixedContent + '}';
-                        JSON5.parse(fixedContent);
-                        return fixedContent;
-                    }
-                } catch (finalError) {
-                    // 如果所有方法都失败，返回null
-                    return null;
-                }
-                return null;
-            }
+            // 如果简单修复失败，继续进行更复杂的修复
+        }
+        
+        // 2. 如果简单修复失败，进行更详细的括号检查
+        let openCurly = (fixedContent.match(/\{/g) || []).length;
+        let closeCurly = (fixedContent.match(/\}/g) || []).length;
+        let openSquare = (fixedContent.match(/\[/g) || []).length;
+        let closeSquare = (fixedContent.match(/\]/g) || []).length;
+        
+        // 补全缺失的括号
+        if (openCurly > closeCurly) {
+            fixedContent = fixedContent + '}'.repeat(openCurly - closeCurly);
+        } else if (closeCurly > openCurly) {
+            fixedContent = '{'.repeat(closeCurly - openCurly) + fixedContent;
+        }
+        
+        if (openSquare > closeSquare) {
+            fixedContent = fixedContent + ']'.repeat(openSquare - closeSquare);
+        } else if (closeSquare > openSquare) {
+            fixedContent = '['.repeat(closeSquare - openSquare) + fixedContent;
+        }
+        
+        // 再次尝试解析
+        try {
+            JSON5.parse(fixedContent);
+            return fixedContent;
+        } catch (e) {
+            // 如果括号修复仍然失败，继续其他修复步骤
+        }
+        
+        // 3. 进行其他修复步骤
+        // 处理Python特殊值和语法
+        fixedContent = fixedContent.replace(/\bTrue\b/g, 'true')
+                                 .replace(/\bFalse\b/g, 'false')
+                                 .replace(/\bNone\b/g, 'null');
+        
+        // 处理引号问题
+        fixedContent = fixUnclosedQuotes(fixedContent);
+        
+        // 处理多余的逗号
+        fixedContent = fixedContent.replace(/,(\s*[\}\]])/g, '$1');
+        
+        // 最后一次尝试解析
+        try {
+            JSON5.parse(fixedContent);
+            return fixedContent;
+        } catch (e) {
+            return null;
         }
     } catch (e) {
         console.error('AI修复过程发生错误:', e);
