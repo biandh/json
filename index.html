@@ -986,8 +986,8 @@ function renderJson(content) {
         } catch(json5Error) {
             // 如果JSON5解析失败，回退到原始方法
             try {
-            current_json = jsonlint.parse(content);
-            current_json_str = JSON.stringify(current_json);
+                current_json = jsonlint.parse(content);
+                current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
             } catch(e) {
                 throw {
@@ -1013,7 +1013,27 @@ function renderJson(content) {
         // 显示错误信息
         var errorMessage = '<div class="error-message" style="color: #f1592a; padding: 10px; background: #fff5f5; border: 1px solid #f1592a; border-radius: 4px; margin: 10px;">';
         errorMessage += '<strong>' + getText('jsonParseError') + '</strong><br/>';
-        errorMessage += e.message + '<br/>';
+        
+        // 处理错误消息
+        let errorText = e.message;
+        
+        // 提取行号信息
+        let lineMatch = errorText.match(/line (\d+)/i);
+        if (lineMatch) {
+            let lineNumber = lineMatch[1];
+            errorText = getText('parseErrorAtLine', [lineNumber]) + ' ' + errorText.replace(/line \d+/i, '');
+        }
+        
+        // 处理其他错误消息
+        if (errorText.includes('Unexpected')) {
+            errorText = getText('unexpectedToken') + ' ' + errorText.split('Unexpected')[1];
+        } else if (errorText.includes('Expected')) {
+            errorText = getText('expectedToken') + ' ' + errorText.split('Expected')[1];
+        } else if (errorText.includes('end of input')) {
+            errorText = getText('endOfInput');
+        }
+        
+        errorMessage += errorText + '<br/>';
         errorMessage += getText('errorHint');
         errorMessage += '</div>';
         
@@ -1704,12 +1724,16 @@ $('.py-test').click(function(){
 // AI修复JSON函数
 function aiFixJson(content) {
     try {
-        // 1. 首先进行基本的括号修复
+        // console.log('开始AI修复，原始内容:', content);
         let fixedContent = content.trim();
+        let originalContent = content.trim(); // 保存原始输入
         
+        // 1. 进行基本的括号修复
         // 检查第一个非空字符
         let firstChar = fixedContent.charAt(0);
         let lastChar = fixedContent.charAt(fixedContent.length - 1);
+        
+        // console.log('首尾字符:', { firstChar, lastChar });
         
         // 如果缺少开头的大括号但有结尾的大括号
         if (firstChar !== '{' && lastChar === '}') {
@@ -1728,12 +1752,15 @@ function aiFixJson(content) {
             fixedContent = fixedContent + ']';
         }
         
+        // console.log('基本括号修复后:', fixedContent);
+        
         // 尝试解析修复后的内容
         try {
             JSON5.parse(fixedContent);
+            // console.log('基本括号修复成功');
             return fixedContent;
         } catch (e) {
-            // 如果简单修复失败，继续进行更复杂的修复
+            console.log('基本括号修复失败:', e.message);
         }
         
         // 2. 如果简单修复失败，进行更详细的括号检查
@@ -1741,6 +1768,16 @@ function aiFixJson(content) {
         let closeCurly = (fixedContent.match(/\}/g) || []).length;
         let openSquare = (fixedContent.match(/\[/g) || []).length;
         let closeSquare = (fixedContent.match(/\]/g) || []).length;
+        
+        // console.log('括号统计:', { openCurly, closeCurly, openSquare, closeSquare });
+        
+        // 移除开头和结尾的多余括号
+        while (fixedContent.startsWith('{{') || fixedContent.startsWith('[[')) {
+            fixedContent = fixedContent.substring(1);
+        }
+        while (fixedContent.endsWith('}}') || fixedContent.endsWith(']]')) {
+            fixedContent = fixedContent.substring(0, fixedContent.length - 1);
+        }
         
         // 补全缺失的括号
         if (openCurly > closeCurly) {
@@ -1755,12 +1792,15 @@ function aiFixJson(content) {
             fixedContent = '['.repeat(closeSquare - openSquare) + fixedContent;
         }
         
+        // console.log('详细括号修复后:', fixedContent);
+        
         // 再次尝试解析
         try {
             JSON5.parse(fixedContent);
+            // console.log('详细括号修复成功');
             return fixedContent;
         } catch (e) {
-            // 如果括号修复仍然失败，继续其他修复步骤
+            console.log('详细括号修复失败:', e.message);
         }
         
         // 3. 进行其他修复步骤
@@ -1775,13 +1815,47 @@ function aiFixJson(content) {
         // 处理多余的逗号
         fixedContent = fixedContent.replace(/,(\s*[\}\]])/g, '$1');
         
-        // 最后一次尝试解析
+        // console.log('其他修复后:', fixedContent);
+        
+        // 尝试解析修复后的内容
         try {
             JSON5.parse(fixedContent);
+            // console.log('其他修复成功');
             return fixedContent;
         } catch (e) {
-            return null;
+            console.log('其他修复失败:', e.message);
         }
+        
+        // 4. 最后尝试使用正则表达式最大贪婪匹配JSON
+        // console.log('开始最大贪婪匹配JSON，使用原始输入');
+        
+        // 确定是对象还是数组
+        const isObject = originalContent.includes('{');
+        // console.log('类型:', isObject ? '对象' : '数组');
+        
+        // 使用最大贪婪模式匹配JSON
+        const pattern = isObject ? 
+            /\{[\s\S]*?\}(?=[^}]*$)/ :  // 匹配对象，直到最后一个}
+            /\[[\s\S]*?\](?=[^\]]*$)/;  // 匹配数组，直到最后一个]
+            
+        const matches = originalContent.match(pattern);
+        
+        if (matches) {
+            const jsonContent = matches[0];
+            // console.log('提取的JSON内容:', jsonContent);
+            
+            try {
+                JSON5.parse(jsonContent);
+                // console.log('提取的JSON解析成功');
+                return jsonContent;
+            } catch (e) {
+                // console.log('提取的JSON解析失败:', e.message);
+            }
+        } else {
+            // console.log('未找到匹配的JSON内容');
+        }
+        
+        return null;
     } catch (e) {
         console.error('AI修复过程发生错误:', e);
         return null;
