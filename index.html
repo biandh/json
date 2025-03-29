@@ -4,8 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Json在线解析及格式化验证 - Hijson.com</title>
-    <meta name="description" content="Json中文网提供免费的JSON在线解析、格式化、验证、压缩、转XML等功能。支持JSON5语法,支持注释和尾部逗号,支持中文,支持大文件,支持本地保存。">
-    <meta name="keywords" content="json解析,json格式化,json验证,json压缩,json转xml,xml转json,json在线工具,json5,json编辑器">
+    
+    <!-- 中文 meta 标签 -->
+    <meta name="description" lang="zh" content="Json中文网提供免费的JSON在线解析、格式化、验证、压缩、转XML等功能。支持JSON5语法,支持注释和尾部逗号,支持中文,支持大文件,支持本地保存。">
+    <meta name="keywords" lang="zh" content="json解析,json格式化,json验证,json压缩,json转xml,xml转json,json在线工具,json5,json编辑器">
+    
+    <!-- 英文 meta 标签 -->
+    <meta name="description" lang="en" content="Free JSON online parser, formatter, validator, compressor, and XML converter. Supports JSON5 syntax, comments, trailing commas, Chinese characters, large files, and local storage.">
+    <meta name="keywords" lang="en" content="json parser,json formatter,json validator,json compressor,json to xml,xml to json,json online tool,json5,json editor">
+    
+    <!-- 日文 meta 标签 -->
+    <meta name="description" lang="ja" content="無料のJSONオンラインパーサー、フォーマッター、バリデーター、圧縮ツール、XMLコンバーター。JSON5構文、コメント、末尾カンマ、中国語文字、大容量ファイル、ローカルストレージに対応。">
+    <meta name="keywords" lang="ja" content="jsonパーサー,jsonフォーマッター,jsonバリデーター,json圧縮,jsonからxml,xmlからjson,jsonオンラインツール,json5,jsonエディター">
+    
+    <!-- 韩文 meta 标签 -->
+    <meta name="description" lang="ko" content="무료 JSON 온라인 파서, 포맷터, 검증기, 압축기 및 XML 변환기. JSON5 구문, 주석, 후행 쉼표, 한자, 대용량 파일 및 로컬 스토리지를 지원합니다.">
+    <meta name="keywords" lang="ko" content="json 파서,json 포맷터,json 검증기,json 압축,json to xml,xml to json,json 온라인 도구,json5,json 에디터">
+    
+    <!-- 俄文 meta 标签 -->
+    <meta name="description" lang="ru" content="Бесплатный онлайн парсер JSON, форматтер, валидатор, компрессор и конвертер XML. Поддерживает синтаксис JSON5, комментарии, завершающие запятые, китайские символы, большие файлы и локальное хранение.">
+    <meta name="keywords" lang="ru" content="json парсер,json форматтер,json валидатор,json компрессор,json в xml,xml в json,json онлайн инструмент,json5,json редактор">
+    
     <meta name="author" content="hijson.com">
     <meta name="application-name" content="HiJson">
     <meta name="apple-mobile-web-app-title" content="HiJson">
@@ -68,10 +87,213 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="css/font-awesome.min.css" rel="stylesheet">
     <link href="css/base.css" rel="stylesheet">
+    <link href="css/jquery.numberedtextarea.css" rel="stylesheet">
     <style>
+        /* 顶部导航栏样式 */
+        header .navi {
+            display: inline-block;
+            margin-right: 120px; /* 为语言选择器留出空间 */
+        }
+        
+        header .navi a {
+            margin-right: 15px;
+            white-space: nowrap;
+        }
+        
+        /* 工具栏导航样式 */
+        main .navi {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            font-size: 16px;
+            gap: 8px; /* 添加按钮之间的间距 */
+        }
+        
+        main .navi a {
+            margin-right: 5px;
+            padding: 5px;
+        }
+        
+        /* 工具栏按钮样式 */
+        .tip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 4px;
+            color: #999;
+            transition: all 0.2s ease;
+        }
+        
+        .tip:hover {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .tip i {
+            font-size: 16px;
+            line-height: 1;
+        }
+        
+        /* 移动端适配样式 */
+        @media screen and (max-width: 768px) {
+            main .navi {
+                gap: 4px; /* 移动端减小间距 */
+            }
+            
+            .tip {
+                width: 28px;
+                height: 28px;
+            }
+            
+            .tip i {
+                font-size: 14px;
+            }
+        }
+        
+        /* 语言选择器样式 */
+        .language-selector {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            z-index: 100;
+        }
+        
+        /* 移动端适配样式 - 使用更高优先级 */
+        @media screen and (max-width: 768px) {
+            /* 隐藏导航栏 */
+            .mobile-nav {
+                display: none !important;
+            }
+            
+            /* 调整提示框位置 */
+            .toast-message {
+                position: fixed !important;
+                top: 0 !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: 90% !important;
+                max-width: 300px !important;
+                margin-top: 10px !important;
+                z-index: 9999 !important;
+                text-align: center !important;
+                background-color: rgba(51, 51, 51, 0.9) !important;
+                border-radius: 4px !important;
+                padding: 8px 15px !important;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+            }
+            
+            /* 隐藏清除浮动的br元素 */
+            br[style="clear:both;"] {
+                display: none !important;
+            }
+            
+            /* 强制使用flex布局 */
+            body main.row-fluid {
+                display: flex !important;
+                flex-direction: column !important;
+                height: 80vh !important;
+                width: 100% !important;
+            }
+            
+            /* 调整左右两栏布局 */
+            body main.row-fluid > div.col-md-5,
+            body main.row-fluid > div.col-md-7 {
+                width: 100% !important;
+                position: relative !important;
+                float: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+            }
+            
+            /* 调整输入区域高度 */
+            body main.row-fluid > div.col-md-5 {
+                height: 30vh !important;
+                min-height: 30vh !important;
+                max-height: 30vh !important;
+            }
+            
+            /* 调整右侧内容区域 */
+            body main.row-fluid > div.col-md-7 {
+                height: 70vh !important;
+                min-height: 70vh !important;
+                max-height: 70vh !important;
+                overflow-y: auto !important;
+                border: none !important;
+            }
+            
+            /* 隐藏分割线 */
+            #divider {
+                display: none !important;
+            }
+            
+            /* 调整右侧内容区域 */
+            #right-box {
+                height: 70vh !important;
+                min-height: 70vh !important;
+                max-height: 70vh !important;
+                overflow-y: auto !important;
+                border: none !important;
+            }
+            
+            /* 调整输入区域高度 */
+            #json-src {
+                height: 30vh !important;
+                min-height: 30vh !important;
+                max-height: 30vh !important;
+                padding: 10px !important;
+            }
+            
+            /* 调整工具栏按钮大小和间距 */
+            .tip {
+                margin: 0 2px !important;
+                font-size: 10px !important;
+            }
+            
+            .tip i {
+                font-size: 18px !important;
+            }
+            
+            /* 调整上传按钮样式 */
+            .upload-btn {
+                font-size: 16px !important;
+                padding: 5px 10px !important;
+            }
+            
+            .upload-btn i {
+                font-size: 14px !important;
+                margin-right: 4px !important;
+            }
+            
+            /* 确保在移动端也能正常显示行号 */
+            .numberedtextarea-wrapper {
+                height: 100% !important;
+                min-height: 100% !important;
+                max-height: 100% !important;
+            }
+            
+            .numberedtextarea-line-numbers {
+                display: none !important;
+            }
+            
+            #line-num {
+                display: none !important;
+            }
+            
+            #json-src {
+                padding-left: 10px !important;
+            }
+        }
+        
+        /* 其他现有样式保持不变 */
         .toast-message {
             position: fixed;
-            top: 60px;  /* 从20px改为60px，确保在语言切换器下方 */
+            top: 60px;
             right: 20px;
             background-color: #333;
             color: #fff;
@@ -97,15 +319,7 @@
             padding: 0px 8px;
         }
         
-        /* 语言选择器样式 */
-        .language-selector {
-            position: absolute;
-            top: 50%;
-            right: 20px;
-            transform: translateY(-50%);
-            z-index: 100;
-        }
-        
+        /* 美化下拉选项 */
         .language-selector select {
             padding: 6px 30px 6px 12px;
             border-radius: 6px;
@@ -134,13 +348,6 @@
             outline: none;
             border-color: #15b374;
             box-shadow: 0 0 0 3px rgba(21, 179, 116, 0.1);
-        }
-        
-        /* 美化下拉选项 */
-        .language-selector select option {
-            padding: 8px;
-            background-color: #fff;
-            color: #333;
         }
         
         /* 适配深色模式 */
@@ -407,16 +614,6 @@
         .ro .json-line:last-child {
             margin-bottom: 50px !important;
         }
-
-        .navi {
-            /* display: flex; */
-            align-items: center;
-            margin-right: 125px; 
-
-        .navi a {
-            margin-right: 1px;
-            white-space: nowrap; /* 防止文本换行 */
-        }
     </style>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -433,21 +630,20 @@
             <a class="logo" href="index.html">hi<span style="color:#555;">json.com</span></a>
 
         </div>
-        <nav class="col-md-7" style="position: relative; padding: 10px 0;"  align="right">
-            <div  class="navi">
+        <nav class="col-md-7 mobile-nav" style="position: relative; padding: 10px 0;" align="right">
+            <div class="navi">
                 <a href="index.html" data-placement="bottom">在线解析</a>
-                
-                <a href="wiki.html"  data-placement="bottom">什么是Json</a>
-                <a href="code.html"  data-placement="bottom">Json解析代码</a>
-                <a href="component.html"  data-placement="bottom">Json组件</a>
-
+                <a href="wiki.html" data-placement="bottom">什么是Json</a>
+                <a href="code.html" data-placement="bottom">Json解析代码</a>
+                <a href="component.html" data-placement="bottom">Json组件</a>
             </div>
-             <div class="language-selector">
+            <div class="language-selector">
                 <select id="language-select" onchange="changeLanguage(this.value)">
                     <option value="zh">中文</option>
                     <option value="en">English</option>
                     <option value="ja">日本語</option>
                     <option value="ko">한국어</option>
+                    <option value="ru">Русский</option>
                 </select>
             </div>
         </nav>
@@ -467,15 +663,7 @@
             <div class="loading-text">正在加载大文件，请稍候...</div>
         </div>
         <div class="form-group" style="height: 100%; margin: 0;">
-            <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..." class="form-control" style="height: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; resize: none; font-family: monospace; font-size: 14px; line-height: 1.4;">{
-    "slogan": "智能的json在线解析工具",
-    "features": [
-        "支持AI智能修复",
-        "支持Python字典格式",
-        "支持大文件处理"
-    ],
-    "version": "1.0.0"
-}</textarea>
+            <textarea id="json-src" placeholder="在此输入json字符串或XML字符串..." class="form-control" style="height: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; resize: none; font-family: monospace; font-size: 14px; line-height: 1.4;"></textarea>
         </div>
         <!-- 重新创建分割线元素，移除可能的事件和样式 -->
         <div id="divider" class="resizer"></div>
@@ -503,7 +691,7 @@
     </div>
     <br style="clear:both;" />
 </main>
-<link href="css/jquery.numberedtextarea.css" rel="stylesheet">
+
 <script src="js/jquery.min.js"></script>
 <script src="js/jquery.message.js"></script>
 <script src="js/jquery.json.js"></script>
@@ -576,47 +764,13 @@ div.numberedtextarea-wrapper textarea:active {
 </style>
 
 <script type="text/javascript">
-// 多语言文本定义
+// 多语言支持
+let currentLang = 'en'; // 默认使用英文
+
+// 多语言文本
 const i18n = {
-    'zh': {  // 中文
-        'navItems': {
-            'onlineParse': '在线解析',
-            'whatIsJson': '什么是Json',
-            'parseCode': 'Json解析代码',
-            'components': 'Json组件'
-        },
-        'upload': '上传',
-        'uploadTitle': '上传JSON文件',
-        'compression': '压缩',
-        'showLineNumbers': '显示行号',
-        'clear': '清空',
-        'undo': '撤回',
-        'copy': '复制',
-        'saveToLocal': '保存到本地',
-        'convertToXml': '转XML',
-        'testPythonSyntax': '测试Python语法',
-        'aiFix': 'AI智能修复',
-        'jsonParseError': 'JSON解析错误:',
-        'errorHint': '提示: 检查是否有<span style="color:#f1592a;font-weight:bold;">缺失</span>的引号、逗号或括号，以及<span style="color:#f1592a;font-weight:bold;">中文</span>引号、逗号或括号。',
-        'parseErrorAtLine': '解析错误，位于第 $1 行:',
-        'unexpectedToken': '意外的',
-        'expectedToken': '应该是',
-        'endOfInput': '输入结束',
-        'errorMessages': {
-            'xmlConvertFailed': 'XML转换失败: $1',
-            'noContentToConvert': '没有可转换的内容',
-            'copyFailed': '复制失败，请手动复制',
-            'noContentToSave': '没有可保存的内容',
-            'noContentToUndo': '没有可撤回的内容',
-            'fileTooLarge': '文件过大，请上传小于20MB的文件',
-            'cannotReadFile': '无法读取文件',
-            'errorReadingFile': '读取文件时发生错误',
-            'noContentToFix': '没有可修复的内容',
-            'cannotFix': '无法修复，请检查JSON格式'
-        },
-        'inputPlaceholder': '在此输入json字符串或XML字符串...'
-    },
-    'en': {  // 英文
+    'en': {
+        'pageTitle': 'JSON Online Parser & Formatter - Hijson.com',
         'navItems': {
             'onlineParse': 'Online Parse',
             'whatIsJson': 'What is Json',
@@ -633,7 +787,13 @@ const i18n = {
         'saveToLocal': 'Save',
         'convertToXml': 'Convert to XML',
         'testPythonSyntax': 'Test Python Syntax',
-        'aiFix': 'AI Fix',
+        'aiFix': {
+            'title': 'AI Fix',
+            'success': 'AI fix successful',
+            'noContent': 'No content to fix',
+            'cannotFix': 'Cannot fix, please check JSON format',
+            'loading': 'Loading large file, please wait...'
+        },
         'jsonParseError': 'JSON Parse Error:',
         'errorHint': 'Hint: Check for <span style="color:#f1592a;font-weight:bold;">missing</span> quotes, commas, or brackets.',
         'parseErrorAtLine': 'Parse error on line $1:',
@@ -650,11 +810,59 @@ const i18n = {
             'cannotReadFile': 'Cannot read file',
             'errorReadingFile': 'Error reading file',
             'noContentToFix': 'No content to fix',
-            'cannotFix': 'Cannot fix, please check JSON format'
+            'cannotFix': 'Cannot fix, please check JSON format',
+            'tryAiFix': 'Failed to parse JSON, please try AI Fix'
         },
         'inputPlaceholder': 'Enter JSON or XML string here...'
     },
-    'ja': {  // 日文
+    'zh': {
+        'pageTitle': 'Json在线解析及格式化验证 - Hijson.com',
+        'navItems': {
+            'onlineParse': '在线解析',
+            'whatIsJson': '什么是Json',
+            'parseCode': 'Json解析代码',
+            'components': 'Json组件'
+        },
+        'upload': '上传',
+        'uploadTitle': '上传JSON文件',
+        'compression': '压缩',
+        'showLineNumbers': '显示行号',
+        'clear': '清空',
+        'undo': '撤回',
+        'copy': '复制',
+        'saveToLocal': '保存到本地',
+        'convertToXml': '转XML',
+        'testPythonSyntax': '测试Python语法',
+        'aiFix': {
+            'title': 'AI智能修复',
+            'success': 'AI修复成功',
+            'noContent': '没有可修复的内容',
+            'cannotFix': '无法修复，请检查JSON格式',
+            'loading': '正在加载大文件，请稍候...'
+        },
+        'jsonParseError': 'JSON解析错误:',
+        'errorHint': '提示: 检查是否有<span style="color:#f1592a;font-weight:bold;">缺失</span>的引号、逗号或括号，以及<span style="color:#f1592a;font-weight:bold;">中文</span>引号、逗号或括号。',
+        'parseErrorAtLine': '解析错误，位于第 $1 行:',
+        'unexpectedToken': '意外的',
+        'expectedToken': '应该是',
+        'endOfInput': '输入结束',
+        'errorMessages': {
+            'xmlConvertFailed': 'XML转换失败: $1',
+            'noContentToConvert': '没有可转换的内容',
+            'copyFailed': '复制失败，请手动复制',
+            'noContentToSave': '没有可保存的内容',
+            'noContentToUndo': '没有可撤回的内容',
+            'fileTooLarge': '文件过大，请上传小于20MB的文件',
+            'cannotReadFile': '无法读取文件',
+            'errorReadingFile': '读取文件时发生错误',
+            'noContentToFix': '没有可修复的内容',
+            'cannotFix': '无法修复，请检查JSON格式',
+            'tryAiFix': '解析JSON失败，请尝试AI修复'
+        },
+        'inputPlaceholder': '在此输入json字符串或XML字符串...'
+    },
+    'ja': {
+        'pageTitle': 'JSONオンラインパーサー＆フォーマッター - Hijson.com',
         'navItems': {
             'onlineParse': 'オンライン解析',
             'whatIsJson': 'Jsonとは',
@@ -671,7 +879,13 @@ const i18n = {
         'saveToLocal': '保存',
         'convertToXml': 'XMLに変換',
         'testPythonSyntax': 'Python構文テスト',
-        'aiFix': 'AI修正',
+        'aiFix': {
+            'title': 'AI修正',
+            'success': 'AI修正が成功しました',
+            'noContent': '修正するコンテンツがありません',
+            'cannotFix': '修正できません、JSON形式を確認してください',
+            'loading': '大きなファイルを読み込んでいます、お待ちください...'
+        },
         'jsonParseError': 'JSON解析エラー:',
         'errorHint': 'ヒント: 引用符、カンマ、または括弧が<span style="color:#f1592a;font-weight:bold;">不足</span>していないか確認してください。',
         'parseErrorAtLine': '行$1で解析エラー:',
@@ -692,7 +906,8 @@ const i18n = {
         },
         'inputPlaceholder': 'ここにJSONまたはXML文字列を入力してください...'
     },
-    'ko': {  // 韩文
+    'ko': {
+        'pageTitle': 'JSON 온라인 파서 및 포맷터 - Hijson.com',
         'navItems': {
             'onlineParse': '온라인 파싱',
             'whatIsJson': 'Json이란',
@@ -709,7 +924,13 @@ const i18n = {
         'saveToLocal': '저장',
         'convertToXml': 'XML로 변환',
         'testPythonSyntax': 'Python 구문 테스트',
-        'aiFix': 'AI 수정',
+        'aiFix': {
+            'title': 'AI 수정',
+            'success': 'AI 수정 성공',
+            'noContent': '수정할 내용이 없습니다',
+            'cannotFix': '수정할 수 없습니다. JSON 형식을 확인하세요',
+            'loading': '큰 파일을 로딩 중입니다. 잠시만 기다려주세요...'
+        },
         'jsonParseError': 'JSON 구문 오류:',
         'errorHint': '힌트: 따옴표, 쉼표 또는 괄호가 <span style="color:#f1592a;font-weight:bold;">누락</span>되었는지 확인하세요.',
         'parseErrorAtLine': '$1번 줄에서 구문 오류:',
@@ -729,11 +950,53 @@ const i18n = {
             'cannotFix': '수정할 수 없습니다. JSON 형식을 확인하세요'
         },
         'inputPlaceholder': '여기에 JSON 또는 XML 문자열을 입력하세요...'
+    },
+    'ru': {
+        'pageTitle': 'JSON Онлайн Парсер и Форматтер - Hijson.com',
+        'navItems': {
+            'onlineParse': 'Онлайн Парсинг',
+            'whatIsJson': 'Что такое Json',
+            'parseCode': 'Код Парсинга',
+            'components': 'Компоненты'
+        },
+        'upload': 'Загрузить',
+        'uploadTitle': 'Загрузить JSON файл',
+        'compression': 'Сжать',
+        'showLineNumbers': 'Показать номера строк',
+        'clear': 'Очистить',
+        'undo': 'Отменить',
+        'copy': 'Копировать',
+        'saveToLocal': 'Сохранить',
+        'convertToXml': 'Конвертировать в XML',
+        'testPythonSyntax': 'Тест Python синтаксиса',
+        'aiFix': {
+            'title': 'AI Исправление',
+            'success': 'AI исправление успешно',
+            'noContent': 'Нет контента для исправления',
+            'cannotFix': 'Невозможно исправить, проверьте формат JSON',
+            'loading': 'Загрузка большого файла, пожалуйста, подождите...'
+        },
+        'jsonParseError': 'Ошибка парсинга JSON:',
+        'errorHint': 'Подсказка: Проверьте наличие <span style="color:#f1592a;font-weight:bold;">отсутствующих</span> кавычек, запятых или скобок.',
+        'parseErrorAtLine': 'Ошибка парсинга в строке $1:',
+        'unexpectedToken': 'Неожиданный',
+        'expectedToken': 'Ожидался',
+        'endOfInput': 'конец ввода',
+        'errorMessages': {
+            'xmlConvertFailed': 'Ошибка конвертации XML: $1',
+            'noContentToConvert': 'Нет контента для конвертации',
+            'copyFailed': 'Ошибка копирования, пожалуйста, скопируйте вручную',
+            'noContentToSave': 'Нет контента для сохранения',
+            'noContentToUndo': 'Нет контента для отмены',
+            'fileTooLarge': 'Файл слишком большой, пожалуйста, загрузите файл меньше 20MB',
+            'cannotReadFile': 'Невозможно прочитать файл',
+            'errorReadingFile': 'Ошибка чтения файла',
+            'noContentToFix': 'Нет контента для исправления',
+            'cannotFix': 'Невозможно исправить, проверьте формат JSON'
+        },
+        'inputPlaceholder': 'Введите JSON или XML строку здесь...'
     }
 };
-
-// 当前语言
-let currentLang = 'zh';
 
 // 切换语言方法
 function changeLanguage(lang) {
@@ -741,6 +1004,9 @@ function changeLanguage(lang) {
     
     // 更新UI元素文本
     updateUIText();
+    
+    // 更新网页标题
+    document.title = i18n[lang].pageTitle;
     
     // 保存语言选择到localStorage
     localStorage.setItem('preferredLanguage', lang);
@@ -782,7 +1048,7 @@ function updateUIText() {
     $('.save-local').attr('title', i18n[currentLang].saveToLocal);
     $('.xml').attr('title', i18n[currentLang].convertToXml);
     $('.py-test').attr('title', i18n[currentLang].testPythonSyntax);
-    $('.ai-fix').attr('title', i18n[currentLang].aiFix);
+    $('.ai-fix').attr('title', i18n[currentLang].aiFix.title || 'AI Fix'); // 修复AI修复按钮的提示文本
     
     // 更新上传按钮文本和提示
     console.log('上传按钮当前状态:', {
@@ -933,6 +1199,7 @@ $('#file-upload').change(function(e) {
         
         // 如果文件大于3MB，显示加载动画
         if (file.size > 3 * 1024 * 1024) {
+            $('.loading-spinner .loading-text').text(getText('aiFix.loading'));
             $('.loading-spinner').show();
         }
         
@@ -983,12 +1250,20 @@ function renderJson(content) {
             current_json = JSON5.parse(content);
             current_json_str = JSON.stringify(current_json);
             var result = new JSONFormat(JSON.stringify(current_json), 4).toString();
+            
+            // 解析成功，移除AI修复图标的错误状态
+            $('.ai-fix').removeClass('has-error ai-fix-glow');
+            $('.ai-fix').attr('style','color:#999;');
         } catch(json5Error) {
             // 如果JSON5解析失败，回退到原始方法
             try {
                 current_json = jsonlint.parse(content);
                 current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
+                
+                // 解析成功，移除AI修复图标的错误状态
+                $('.ai-fix').removeClass('has-error ai-fix-glow');
+                $('.ai-fix').attr('style','color:#999;');
             } catch(e) {
                 throw {
                     message: e.toString(),
@@ -1043,8 +1318,15 @@ function renderJson(content) {
         current_json = null;
         current_json_str = '';
         
-        // 显示错误提示
-        showToast(getText('errorMessages.cannotFix'), 'error');
+        // 显示错误提示，引导用户使用AI修复
+        showToast(getText('errorMessages.tryAiFix'), 'error');
+        
+        // 设置AI修复图标为橙色并闪烁
+        $('.ai-fix').addClass('has-error ai-fix-glow');
+        // 5秒后停止闪烁
+        setTimeout(function() {
+            $('.ai-fix').removeClass('ai-fix-glow');
+        }, 5000);
     }
 }
 
@@ -1481,8 +1763,8 @@ $('#json-src').on('click focus', function(e) {
 
 // 页面加载完成后自动触发解析和调整高度
 $(document).ready(function() {
-    // 触发解析默认JSON示例
-$('#json-src').keyup();
+    // 不再自动触发解析，因为现在没有默认内容
+    // $('#json-src').keyup();
     
     // 强制移除numberedtextarea的所有可能导致闪烁的样式
     function fixNumberedTextarea() {
@@ -1638,6 +1920,8 @@ $('#json-src').keyup();
     if (savedLang && i18n[savedLang]) {
         currentLang = savedLang;
         $('#language-select').val(savedLang);
+        // 设置初始网页标题
+        document.title = i18n[savedLang].pageTitle;
     } else {
         // 如果没有保存的设置，尝试检测浏览器语言
         const browserLang = navigator.language || navigator.userLanguage;
@@ -1646,6 +1930,14 @@ $('#json-src').keyup();
         if (i18n[shortLang]) {
             currentLang = shortLang;
             $('#language-select').val(shortLang);
+            // 设置初始网页标题
+            document.title = i18n[shortLang].pageTitle;
+        } else {
+            // 如果浏览器语言不是支持的语言，使用英文作为默认语言
+            currentLang = 'en';
+            $('#language-select').val('en');
+            // 设置初始网页标题
+            document.title = i18n['en'].pageTitle;
         }
     }
     
@@ -1656,7 +1948,7 @@ $('#json-src').keyup();
 $('.ai-fix').click(function(){
     var content = $.trim($('#json-src').val());
     if(content == '') {
-        showToast('没有可修复的内容', 'error');
+        showToast(getText('aiFix.noContent'), 'error');
         return;
     }
     
@@ -1671,8 +1963,8 @@ $('.ai-fix').click(function(){
         $('#json-src').val(fixedJson);
         // 触发解析
         $('#json-src').keyup();
-        // 保留修复成功提示
-        showToast('AI修复成功', 'success');
+        // 显示修复成功提示
+        showToast(getText('aiFix.success'), 'success');
         $(this).attr('style','color:#15b374;');
         // 移除错误类
         $('.ai-fix').removeClass('has-error');
@@ -1680,7 +1972,14 @@ $('.ai-fix').click(function(){
             $('.ai-fix').attr('style','color:#999;');
         }, 1500);
     } else {
-        showToast(getText('errorMessages.cannotFix'), 'error');
+        // 显示错误提示
+        showToast(getText('aiFix.cannotFix'), 'error');
+        // 设置图标为橙色并添加闪烁效果
+        $('.ai-fix').addClass('has-error ai-fix-glow');
+        // 5秒后停止闪烁
+        setTimeout(function() {
+            $('.ai-fix').removeClass('ai-fix-glow');
+        }, 5000);
     }
 });
 
