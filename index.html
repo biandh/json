@@ -104,6 +104,29 @@
             white-space: nowrap;
         }
         
+        /* 添加平滑过渡的媒体查询 */
+        @media screen and (max-width: 992px) {
+            header .col-md-7.mobile-nav {
+                width: 58.333333% !important;
+                transition: all 0.3s ease;
+            }
+            
+            header .col-md-5 {
+                width: 41.666667% !important;
+                transition: all 0.3s ease;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            header .col-md-7.mobile-nav {
+                display: none !important;
+            }
+            
+            header .col-md-5 {
+                width: 100% !important;
+            }
+        }
+        
         /* 工具栏导航样式 */
         main .navi {
             display: flex;
@@ -629,11 +652,11 @@
 <body style="over-flow:hidden;">
 <div class="toast-message" id="toast-message"><i class="fa fa-check-circle"></i><span id="toast-text">已复制到剪贴板</span></div>
 <header class="header" style="padding: 8px 0;">
-    <div class="row-fluid" style="display: flex; align-items: center; height: 100%; margin: 0; width: 100%;">
-        <div class="col-md-5" style="position:relative; display: flex; align-items: center; padding: 0;">
+    <div class="row-fluid" style="display: flex; align-items: center; height: 100%;">
+        <div class="col-md-5" style="position:relative; display: flex; align-items: center;">
             <a class="logo" href="index.html" style="line-height: 1;">hi<span style="color:#555;">json.com</span></a>
         </div>
-        <nav class="col-md-7 mobile-nav" style="position: relative; height: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0; width: 100%;">
+        <nav class="col-md-7 mobile-nav" style="position: relative; height: 100%; display: flex; align-items: center; justify-content: flex-end; width: 58.333333%;">
             <div class="navi" style="display: flex; align-items: center;">
                 <a href="index.html" data-placement="bottom" style="line-height: 1;">在线解析</a>
                 <a href="wiki.html" data-placement="bottom" style="line-height: 1;">什么是Json</a>
@@ -655,8 +678,8 @@
 </header>
 
 
-<main class="row-fluid">
-    <div class="col-md-5" style="padding:0;">
+<main class="row-fluid" style="display: flex; width: 100%; margin: 0; padding: 0;">
+    <div class="col-md-5" style="padding:0; width: 41.666667%;">
         <label class="upload-btn" for="file-upload" data-title="uploadTitle">
             <i class="fa fa-upload"></i><span>上传</span>
         </label>
@@ -671,7 +694,7 @@
         <!-- 重新创建分割线元素，移除可能的事件和样式 -->
         <div id="divider" class="resizer"></div>
     </div>
-    <div class="col-md-7" style="padding:0;">
+    <div class="col-md-7" style="padding:0; width: 58.333333%;">
         <div style="padding:10px;font-size:16px;" class="navi">
             <a href="javascript:void(0);" class="tip zip" title="压缩" data-placement="bottom"><i class="fa fa-database"></i></a>
             <a href="javascript:void(0);" class="tip shown" title="显示行号" data-placement="bottom"><i class="glyphicon glyphicon-sort-by-order"></i></a>
@@ -692,7 +715,6 @@
         </div>
         <form id="form-save" method="POST"><input type="hidden" value="" id="txt-content" name="content"></form>
     </div>
-    <br style="clear:both;" />
 </main>
 
 <script src="js/jquery.min.js"></script>
@@ -2310,3 +2332,5 @@ $('#json-src').keyup(function(){
 </script>
 </body>
 </html>
+
+_file>
