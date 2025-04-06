@@ -628,20 +628,19 @@
 </head>
 <body style="over-flow:hidden;">
 <div class="toast-message" id="toast-message"><i class="fa fa-check-circle"></i><span id="toast-text">已复制到剪贴板</span></div>
-<header class="header">
-    <div class="row-fluid" >
-        <div class="col-md-5" style="position:relative;">
-            <a class="logo" href="index.html">hi<span style="color:#555;">json.com</span></a>
-
+<header class="header" style="padding: 8px 0;">
+    <div class="row-fluid" style="display: flex; align-items: center; height: 100%;">
+        <div class="col-md-5" style="position:relative; display: flex; align-items: center;">
+            <a class="logo" href="index.html" style="line-height: 1;">hi<span style="color:#555;">json.com</span></a>
         </div>
-        <nav class="col-md-7 mobile-nav" style="position: relative; padding: 10px 0;" align="right">
-            <div class="navi">
-                <a href="index.html" data-placement="bottom">在线解析</a>
-                <a href="wiki.html" data-placement="bottom">什么是Json</a>
-                <a href="code.html" data-placement="bottom">Json解析代码</a>
-                <a href="component.html" data-placement="bottom">Json组件</a>
+        <nav class="col-md-7 mobile-nav" style="position: relative; height: 100%; display: flex; align-items: center; justify-content: flex-end;">
+            <div class="navi" style="display: flex; align-items: center;">
+                <a href="index.html" data-placement="bottom" style="line-height: 1;">在线解析</a>
+                <a href="wiki.html" data-placement="bottom" style="line-height: 1;">什么是Json</a>
+                <a href="code.html" data-placement="bottom" style="line-height: 1;">Json解析代码</a>
+                <a href="component.html" data-placement="bottom" style="line-height: 1;">Json组件</a>
             </div>
-            <div class="language-selector">
+            <div class="language-selector" style="display: flex; align-items: center;">
                 <select id="language-select" onchange="changeLanguage(this.value)">
                     <option value="zh">中文</option>
                     <option value="en">English</option>
