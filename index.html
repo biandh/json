@@ -1277,8 +1277,13 @@ function renderJson(content) {
             
             // 修改字符串中的换行符显示
             var result = new JSONFormat(JSON.stringify(current_json), 4).toString();
-            result = result.replace(/"([^"]*)(?:\n|\r\n|\r)([^"]*)"/g, function(match, p1, p2) {
-                return '"' + p1 + '\\n' + p2 + '"';
+            
+            // 修改正则表达式，处理所有换行符
+            // 先找到所有的JSON字符串
+            result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
+                // 将字符串内的所有换行符替换为\n
+                var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
+                return '<span class="json_string">"' + fixedStr + '"</span>';
             });
             
             // 解析成功，移除AI修复图标的错误状态
@@ -1290,8 +1295,12 @@ function renderJson(content) {
                 current_json = jsonlint.parse(content);
                 current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
-                result = result.replace(/"([^"]*)(?:\n|\r\n|\r)([^"]*)"/g, function(match, p1, p2) {
-                    return '"' + p1 + '\\n' + p2 + '"';
+                
+                // 应用相同的换行符处理逻辑
+                result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
+                    // 将字符串内的所有换行符替换为\n
+                    var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
+                    return '<span class="json_string">"' + fixedStr + '"</span>';
                 });
                 
                 // 解析成功，移除AI修复图标的错误状态
