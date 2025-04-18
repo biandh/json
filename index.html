@@ -687,7 +687,7 @@
         <div class="loading-spinner">
             <i class="fa fa-spinner"></i>
             <div class="loading-text">正在加载大文件，请稍候...</div>
-        </div>
+    </div>
         <div class="form-group" style="height: 100%; margin: 0;">
             <textarea id="json-src" placeholder="在此输入json字符串..." class="form-control" style="height: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; resize: none; font-family: monospace; font-size: 14px; line-height: 1.4;"></textarea>
         </div>
@@ -1274,7 +1274,12 @@ function renderJson(content) {
             // 首先尝试使用JSON5解析
             current_json = JSON5.parse(content);
             current_json_str = JSON.stringify(current_json);
+            
+            // 修改字符串中的换行符显示
             var result = new JSONFormat(JSON.stringify(current_json), 4).toString();
+            result = result.replace(/"([^"]*)(?:\n|\r\n|\r)([^"]*)"/g, function(match, p1, p2) {
+                return '"' + p1 + '\\n' + p2 + '"';
+            });
             
             // 解析成功，移除AI修复图标的错误状态
             $('.ai-fix').removeClass('has-error ai-fix-glow');
@@ -1282,9 +1287,12 @@ function renderJson(content) {
         } catch(json5Error) {
             // 如果JSON5解析失败，回退到原始方法
             try {
-            current_json = jsonlint.parse(content);
-            current_json_str = JSON.stringify(current_json);
+                current_json = jsonlint.parse(content);
+                current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
+                result = result.replace(/"([^"]*)(?:\n|\r\n|\r)([^"]*)"/g, function(match, p1, p2) {
+                    return '"' + p1 + '\\n' + p2 + '"';
+                });
                 
                 // 解析成功，移除AI修复图标的错误状态
                 $('.ai-fix').removeClass('has-error ai-fix-glow');
