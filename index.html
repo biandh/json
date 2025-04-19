@@ -127,6 +127,15 @@
             }
         }
         
+        /* 添加换行显示相关样式 */
+        .show-newline-active {
+            color: #15b374 !important;
+        }
+        
+        .show-actual-newlines .json_string {
+            white-space: pre-wrap !important;
+        }
+        
         /* 工具栏导航样式 */
         main .navi {
             display: flex;
@@ -641,6 +650,15 @@
         .ro .json-line:last-child {
             margin-bottom: 50px !important;
         }
+        
+        /* 添加换行展示的样式 */
+        .show-newline-active {
+            color: #15b374 !important;
+        }
+        
+        .show-actual-newlines .json_string {
+            white-space: pre-wrap;
+        }
     </style>
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -705,6 +723,7 @@
             <a class="tip xml" title="转XML" data-placement="bottom"><i class="fa fa-file-code-o"></i></a>
             <a class="tip py-test" title="测试Python语法" data-placement="bottom"><i class="fa fa-flask"></i></a>
             <a href="javascript:void(0);" class="tip ai-fix" title="AI智能修复" data-placement="bottom" style="color: #f1592a;"><i class="fa fa-magic"></i></a>
+            <a href="javascript:void(0);" class="tip show-newline" title="显示换行" data-placement="bottom" data-title="showNewlineTitle"><i class="fa fa-paragraph"></i></a>
         </div>
         <div id="right-box"  style="height:679px;border-right:solid 1px #ddd;border-bottom:solid 1px #ddd;border-radius:0;resize: none;overflow-y:scroll; outline:none;position:relative;">
             <div id="line-num" style="background-color:#fafafa;padding:0px 8px;float:left;border-right:dashed 1px #eee;display:none;z-index:-1;color:#999;position:absolute;text-align:center;over-flow:hidden;">
@@ -812,6 +831,7 @@ const i18n = {
         'saveToLocal': 'Save',
         'convertToXml': 'Convert to XML',
         'testPythonSyntax': 'Test Python Syntax',
+        'showNewlineTitle': 'Show Newlines',
         'aiFix': {
             'title': 'AI Fix',
             'success': 'AI fix successful',
@@ -858,6 +878,7 @@ const i18n = {
         'saveToLocal': '保存到本地',
         'convertToXml': '转XML',
         'testPythonSyntax': '测试Python语法',
+        'showNewlineTitle': '显示换行',
         'aiFix': {
             'title': 'AI智能修复',
             'success': 'AI修复成功',
@@ -904,6 +925,7 @@ const i18n = {
         'saveToLocal': '保存',
         'convertToXml': 'XMLに変換',
         'testPythonSyntax': 'Python構文テスト',
+        'showNewlineTitle': '改行を表示',
         'aiFix': {
             'title': 'AI修正',
             'success': 'AI修正が成功しました',
@@ -949,6 +971,7 @@ const i18n = {
         'saveToLocal': '저장',
         'convertToXml': 'XML로 변환',
         'testPythonSyntax': 'Python 구문 테스트',
+        'showNewlineTitle': '줄바꿈 표시',
         'aiFix': {
             'title': 'AI 수정',
             'success': 'AI 수정 성공',
@@ -994,6 +1017,7 @@ const i18n = {
         'saveToLocal': 'Сохранить',
         'convertToXml': 'Конвертировать в XML',
         'testPythonSyntax': 'Тест Python синтаксиса',
+        'showNewlineTitle': 'Показать переносы строк',
         'aiFix': {
             'title': 'AI Исправление',
             'success': 'AI исправление успешно',
@@ -1074,6 +1098,7 @@ function updateUIText() {
     $('.xml').attr('title', i18n[currentLang].convertToXml);
     $('.py-test').attr('title', i18n[currentLang].testPythonSyntax);
     $('.ai-fix').attr('title', i18n[currentLang].aiFix.title || 'AI Fix'); // 修复AI修复按钮的提示文本
+    $('.show-newline').attr('title', i18n[currentLang].showNewlineTitle || 'Show Newlines'); // 添加换行显示按钮的提示文本
     
     // 更新上传按钮文本和提示
     console.log('上传按钮当前状态:', {
@@ -1278,13 +1303,15 @@ function renderJson(content) {
             // 修改字符串中的换行符显示
             var result = new JSONFormat(JSON.stringify(current_json), 4).toString();
             
-            // 修改正则表达式，处理所有换行符
-            // 先找到所有的JSON字符串
-            result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
-                // 将字符串内的所有换行符替换为\n
-                var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
-                return '<span class="json_string">"' + fixedStr + '"</span>';
-            });
+            // 根据当前模式处理换行符
+            if (!showActualNewlines) {
+                // 先找到所有的JSON字符串
+                result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
+                    // 将字符串内的所有换行符替换为\n
+                    var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
+                    return '<span class="json_string">"' + fixedStr + '"</span>';
+                });
+            }
             
             // 解析成功，移除AI修复图标的错误状态
             $('.ai-fix').removeClass('has-error ai-fix-glow');
@@ -1296,12 +1323,15 @@ function renderJson(content) {
                 current_json_str = JSON.stringify(current_json);
                 result = new JSONFormat(content, 4).toString();
                 
-                // 应用相同的换行符处理逻辑
-                result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
-                    // 将字符串内的所有换行符替换为\n
-                    var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
-                    return '<span class="json_string">"' + fixedStr + '"</span>';
-                });
+                // 根据当前模式处理换行符
+                if (!showActualNewlines) {
+                    // 应用相同的换行符处理逻辑
+                    result = result.replace(/<span class="json_string">"([\s\S]*?)"<\/span>/g, function(match, p1) {
+                        // 将字符串内的所有换行符替换为\n
+                        var fixedStr = p1.replace(/\n|\r\n|\r/g, '\\n');
+                        return '<span class="json_string">"' + fixedStr + '"</span>';
+                    });
+                }
                 
                 // 解析成功，移除AI修复图标的错误状态
                 $('.ai-fix').removeClass('has-error ai-fix-glow');
@@ -1322,6 +1352,13 @@ function renderJson(content) {
         
         // 一次性更新DOM
         $('#json-target').append(fragment);
+        
+        // 如果当前模式是显示实际换行，添加类以启用white-space: pre-wrap
+        if (showActualNewlines) {
+            $('#json-target').addClass("show-actual-newlines");
+        } else {
+            $('#json-target').removeClass("show-actual-newlines");
+        }
         
         // 确保内容底部有足够空间
         ensureBottomSpaceForJson();
@@ -1985,6 +2022,68 @@ $(document).ready(function() {
     
     // 初始化UI文本
     updateUIText();
+    
+    // 添加换行显示的点击事件
+    $(".show-newline").click(function() {
+        showActualNewlines = !showActualNewlines;
+        
+        // 切换按钮状态
+        if (showActualNewlines) {
+            $(this).addClass("show-newline-active");
+            $('#json-target').addClass("show-actual-newlines");
+            // 将所有\n转换为实际换行
+            $('.json_string').each(function() {
+                var text = $(this).text();
+                var newText = text.replace(/\\n/g, '\n');
+                $(this).text(newText);
+            });
+        } else {
+            $(this).removeClass("show-newline-active");
+            $('#json-target').removeClass("show-actual-newlines");
+            // 重新渲染JSON
+            renderJson($('#json-src').val());
+        }
+    });
+    
+    // 保存原始renderJson函数
+    var originalRenderJson = window.renderJson;
+    
+    // 重写renderJson函数
+    window.renderJson = function(content) {
+        try {
+            // 首先使用原始函数解析
+            originalRenderJson(content);
+            
+            // 如果不显示实际换行，处理换行符
+            if (!showActualNewlines) {
+                // 查找所有字符串并替换换行符
+                $('.json_string').each(function() {
+                    var text = $(this).text();
+                    var fixedText = text.replace(/\n|\r\n|\r/g, '\\n');
+                    $(this).text(fixedText);
+                });
+            } else {
+                // 应用样式
+                $('#json-target').addClass("show-actual-newlines");
+            }
+        } catch(e) {
+            console.error("Error rendering JSON:", e);
+        }
+    };
+    
+    // 初始化工作
+    $(function(){
+        // ... existing code ...
+        
+        // 确保所有具有data-title属性的元素都在语言切换时更新其title
+        $('[data-title]').each(function() {
+            var $element = $(this);
+            var titleKey = $element.attr('data-title');
+            $element.attr('title', i18n[currentLang][titleKey] || titleKey);
+        });
+        
+        // ... existing code ...
+    });
 });
 
 $('.ai-fix').click(function(){
@@ -2345,6 +2444,16 @@ function ensureBottomSpaceForJson() {
 $('#json-src').keyup(function(){
     // ... existing code ...
     ensureBottomSpaceForJson();
+});
+
+// 添加全局变量来跟踪换行符显示模式
+var showActualNewlines = false;
+
+// 原始函数的引用
+var originalRenderJson;
+
+$(document).ready(function(){
+// ... existing code ...
 });
 </script>
 </body>
