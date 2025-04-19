@@ -568,16 +568,14 @@
         
         /* 可拖动分割线样式 - 完全重写以消除任何发光效果 */
         .resizer {
-            width: 6px;
+            width: 14px; /* 增加宽度，提供更大的点击区域 */
             height: 100%;
             position: absolute;
-            right: 0;
+            right: -7px; /* 保持中心对齐 */
             top: 0;
             cursor: col-resize;
             z-index: 200;
-            background: #eee;
-            border-left: 1px solid #ddd;
-            border-right: 1px solid #ddd;
+            background: transparent;
             /* 确保没有任何可能导致发光的样式 */
             box-shadow: none !important;
             text-shadow: none !important;
@@ -586,12 +584,26 @@
             outline: none !important;
         }
         
-        .resizer:hover {
-            background-color: #ccc;
+        .resizer::after {
+            content: "";
+            display: block;
+            width: 6px; /* 调整竖线宽度为6px */
+            height: 100%;
+            background: #f0f0f0; /* 较淡的填充色 */
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 1px solid #ccc; /* 左边框 */
+            border-right: 1px solid #ccc; /* 右边框 */
+            box-sizing: border-box;
         }
         
-        .resizer.dragging {
-            background-color: #ccc;
+        .resizer:hover::after {
+            background-color: #e5e5e5; /* 悬停时填充色稍深 */
+        }
+        
+        .resizer.dragging::after {
+            background-color: #ccc; /* 拖动时填充色与边框同色 */
         }
         
         /* 拖动时禁用文本选择 */
@@ -1921,23 +1933,20 @@ $(document).ready(function() {
         var $mainContainer = $('main.row-fluid');
         var $divider = $('#divider');
         var isDragging = false;
-        var startX, startLeftWidth;
         
         // 移除任何可能残留的事件监听器
         $divider.off();
         
         // 确保分割线样式纯净
         $divider.css({
-            'width': '6px',
+            'width': '14px',
             'height': '100%',
             'position': 'absolute',
-            'right': '0',
+            'right': '-7px',
             'top': '0',
             'cursor': 'col-resize',
             'z-index': '200',
-            'background': '#eee',
-            'border-left': '1px solid #ddd',
-            'border-right': '1px solid #ddd',
+            'background': 'transparent',
             'box-shadow': 'none',
             'transition': 'none',
             'animation': 'none',
@@ -1947,12 +1956,7 @@ $(document).ready(function() {
         // 重新绑定事件
         $divider.on('mousedown', function(e) {
             isDragging = true;
-            startX = e.pageX;
-            startLeftWidth = $leftPanel.width();
-            
-            $divider.css('background-color', '#ccc');
             $('body').addClass('dragging');
-            
             e.preventDefault();
             e.stopPropagation();
         });
@@ -1961,7 +1965,11 @@ $(document).ready(function() {
             if (!isDragging) return;
             
             var mainWidth = $mainContainer.width();
-            var newLeftWidth = startLeftWidth + (e.pageX - startX);
+            var mainOffset = $mainContainer.offset().left;
+            var mousePosition = e.pageX;
+            
+            // 直接使用鼠标位置来确定左面板宽度
+            var newLeftWidth = mousePosition - mainOffset;
             
             // 限制最小宽度
             if (newLeftWidth < 200) newLeftWidth = 200;
@@ -1975,6 +1983,7 @@ $(document).ready(function() {
             $leftPanel.css('width', leftPercent + '%');
             $rightPanel.css('width', rightPercent + '%');
             
+            // 重新定位分隔线，确保它始终保持在左面板右边缘
             // 触发窗口调整事件以重新计算各元素大小
             $(window).trigger('resize');
         });
@@ -1982,7 +1991,6 @@ $(document).ready(function() {
         $(document).on('mouseup', function() {
             if (isDragging) {
                 isDragging = false;
-                $divider.css('background-color', '#eee');
                 $('body').removeClass('dragging');
             }
         });
